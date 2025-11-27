@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Option Greeks - Monte Carlo Lab{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 class="text-2xl font-bold text-indigo-900 mb-4">Option Greeks Calculation</h2>
+    <p class="text-gray-700 mb-4">
+        Calculate option Greeks (Delta, Gamma, Vega, Theta, Rho) using Monte Carlo simulation with finite difference methods.
+        Greeks measure the sensitivity of option prices to changes in underlying parameters.
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-6">
+        <div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Initial Price (S₀)
+                    </label>
+                    <input type="number" id="S0" value="100" min="0.01" step="0.01" class="input-field" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Strike Price (K)
+                    </label>
+                    <input type="number" id="K" value="100" min="0.01" step="0.01" class="input-field" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Time to Maturity (T)
+                    </label>
+                    <input type="number" id="T" value="1" step="0.01" min="0.01" max="50" class="input-field" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Risk-free Rate (r)
+                    </label>
+                    <input type="number" id="r" value="0.05" step="0.001" min="0" max="1" class="input-field" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Volatility (σ)
+                    </label>
+                    <input type="number" id="sigma" value="0.2" step="0.01" min="0.01" max="5" class="input-field" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Simulations
+                    </label>
+                    <input type="number" id="simulations" value="10000" step="1000" min="1000" max="1000000" class="input-field" required>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Finite Difference Step (ε)
+                    </label>
+                    <input type="number" id="epsilon" value="0.05" step="0.001" min="0.001" max="0.1" class="input-field" required>
+                    <p class="text-xs text-gray-500 mt-1">Recommended: 0.01-0.05. Smaller values may cause numerical instability.</p>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Option Type
+                </label>
+                <div class="flex gap-4">
+                    <label class="flex items-center">
+                        <input type="radio" name="optionType" value="call" checked class="mr-2">
+                        Call
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="optionType" value="put" class="mr-2">
+                        Put
+                    </label>
+                </div>
+            </div>
+
+            <button onclick="calculateGreeks()" class="btn-primary w-full mb-4" id="calculateBtn">
+                Calculate Greeks
+            </button>
+
+            <div class="loading hidden" id="loading">
+                <div class="spinner"></div>
+                <p class="mt-2 text-gray-600">Calculating... This may take a few seconds.</p>
+            </div>
+
+            <div id="errorAlert" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 hidden">
+                <div class="flex items-center">
+                    <div class="text-red-600">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800" id="errorMessage"></h3>
+                    </div>
+                </div>
+            </div>
+
+            <div id="results" class="bg-indigo-50 p-4 rounded-lg hidden">
+                <h3 class="font-bold text-lg mb-3 text-indigo-800">Results</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-sm">
+                        <strong>Option Price:</strong> $<span id="price"></span>
+                    </div>
+                    <div class="text-sm">
+                        <strong>Delta (Δ):</strong> <span id="delta"></span>
+                    </div>
+                    <div class="text-sm">
+                        <strong>Gamma (Γ):</strong> <span id="gamma"></span>
+                    </div>
+                    <div class="text-sm">
+                        <strong>Vega (ν):</strong> <span id="vega"></span>
+                    </div>
+                    <div class="text-sm">
+                        <strong>Theta (Θ):</strong> <span id="theta"></span>
+                    </div>
+                    <div class="text-sm">
+                        <strong>Rho (ρ):</strong> <span id="rho"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div id="greeksChart" style="width: 100%; height: 500px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Rest of your content remains the same -->
+<div class="card bg-yellow-50">
+    <h3 class="text-xl font-bold text-yellow-900 mb-2">Greeks Definitions</h3>
+    <!-- ... keep existing content ... -->
+</div>
+
+<div class="card bg-blue-50">
+    <h3 class="text-xl font-bold text-blue-900 mb-2">Interpretation Guide</h3>
+    <!-- ... keep existing content ... -->
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showError(message) {
+    const errorAlert = document.getElementById('errorAlert');
+    const errorMessage = document.getElementById('errorMessage');
+    errorMessage.textContent = message;
+    errorAlert.classList.remove('hidden');
+}
+
+function hideError() {
+    document.getElementById('errorAlert').classList.add('hidden');
+}
+
+function showLoading(id) {
+    document.getElementById(id).classList.remove('hidden');
+}
+
+function hideLoading(id) {
+    document.getElementById(id).classList.add('hidden');
+}
+
+function validateParams(params) {
+    if (params.S0 <= 0) throw new Error('Initial price must be positive');
+    if (params.K <= 0) throw new Error('Strike price must be positive');
+    if (params.T <= 0) throw new Error('Time to maturity must be positive');
+    if (params.r < 0) throw new Error('Risk-free rate cannot be negative');
+    if (params.sigma <= 0) throw new Error('Volatility must be positive');
+    if (params.simulations < 1000) throw new Error('Minimum 1000 simulations required');
+    if (params.epsilon <= 0 || params.epsilon > 0.1) throw new Error('Step size must be between 0.001 and 0.1');
+    return true;
+}
+
+async function calculateGreeks() {
+    const params = {
+        S0: parseFloat(document.getElementById('S0').value),
+        K: parseFloat(document.getElementById('K').value),
+        T: parseFloat(document.getElementById('T').value),
+        r: parseFloat(document.getElementById('r').value),
+        sigma: parseFloat(document.getElementById('sigma').value),
+        simulations: parseInt(document.getElementById('simulations').value),
+        optionType: document.querySelector('input[name="optionType"]:checked').value,
+        epsilon: parseFloat(document.getElementById('epsilon').value)
+    };
+    
+    try {
+        validateParams(params);
+    } catch (error) {
+        showError(error.message);
+        return;
+    }
+    
+    const calculateBtn = document.getElementById('calculateBtn');
+    calculateBtn.disabled = true;
+    showLoading('loading');
+    hideError();
+    document.getElementById('results').classList.add('hidden');
+    
+    try {
+        const response = await fetch('/api/calculate-greeks', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Server error');
+        }
+        
+        const data = await response.json();
+        
+        // Validate results make sense
+        if (data.theta > 0) {
+            console.warn('Theta is positive - this may indicate calculation issues');
+        }
+        if (Math.abs(data.gamma) > 10) {
+            console.warn('Gamma seems unusually high');
+        }
+        
+        // Update results
+        document.getElementById('price').textContent = data.price.toFixed(4);
+        document.getElementById('delta').textContent = data.delta.toFixed(4);
+        document.getElementById('gamma').textContent = data.gamma.toFixed(6); // More precision for gamma
+        document.getElementById('vega').textContent = data.vega.toFixed(4);
+        document.getElementById('theta').textContent = data.theta.toFixed(4);
+        document.getElementById('rho').textContent = data.rho.toFixed(4);
+        document.getElementById('results').classList.remove('hidden');
+        
+        // Create greeks visualization
+        const greeksData = [
+            {
+                x: ['Delta', 'Gamma', 'Vega', 'Theta', 'Rho'],
+                y: [data.delta, data.gamma * 100, data.vega, data.theta, data.rho], // Scale gamma for better visualization
+                type: 'bar',
+                marker: {
+                    color: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+                }
+            }
+        ];
+        
+        const layout = {
+            title: 'Option Greeks Visualization',
+            xaxis: { title: 'Greek' },
+            yaxis: { title: 'Value' },
+            showlegend: false
+        };
+        
+        Plotly.newPlot('greeksChart', greeksData, layout);
+        
+    } catch (error) {
+        showError(error.message);
+        console.error('Calculation error:', error);
+    } finally {
+        hideLoading('loading');
+        calculateBtn.disabled = false;
+    }
+}
+
+// Initialize chart with empty data
+Plotly.newPlot('greeksChart', [{
+    x: ['Delta', 'Gamma', 'Vega', 'Theta', 'Rho'],
+    y: [0, 0, 0, 0, 0],
+    type: 'bar',
+    marker: {color: '#e5e7eb'}
+}], {
+    title: 'Option Greeks Visualization',
+    xaxis: { title: 'Greek' },
+    yaxis: { title: 'Value' }
+});
+</script>
+{% endblock %}

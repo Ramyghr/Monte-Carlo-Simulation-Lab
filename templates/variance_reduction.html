@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block title %}Variance Reduction - Monte Carlo Lab{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 class="text-2xl font-bold text-indigo-900 mb-4">Variance Reduction Techniques</h2>
+    <p class="text-gray-700 mb-4">
+        Compare different variance reduction techniques to improve Monte Carlo simulation efficiency.
+        Reduce computational cost while maintaining accuracy for option pricing and risk calculations.
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-6">
+        <div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Initial Price (S₀)
+                    </label>
+                    <input type="number" id="S0" value="100" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Strike Price (K)
+                    </label>
+                    <input type="number" id="K" value="100" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Time to Maturity (T)
+                    </label>
+                    <input type="number" id="T" value="1" step="0.1" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Risk-free Rate (r)
+                    </label>
+                    <input type="number" id="r" value="0.05" step="0.01" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Volatility (σ)
+                    </label>
+                    <input type="number" id="sigma" value="0.2" step="0.01" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Simulations per Trial
+                    </label>
+                    <input type="number" id="simulations" value="1000" class="input-field">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Methods to Compare
+                </label>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="methods" value="standard" checked class="mr-2">
+                        Standard Monte Carlo
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="methods" value="antithetic" checked class="mr-2">
+                        Antithetic Variates
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="methods" value="control" checked class="mr-2">
+                        Control Variates
+                    </label>
+                </div>
+            </div>
+
+            <button onclick="compareVarianceMethods()" class="btn-primary w-full mb-4" id="compareBtn">
+                Compare Methods
+            </button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p class="mt-2 text-gray-600">Running simulations...</p>
+            </div>
+
+            <div id="results" class="bg-indigo-50 p-4 rounded-lg space-y-4" style="display: none;">
+                <h3 class="font-bold text-lg text-indigo-800">Variance Comparison Results</h3>
+                
+                <div id="methodResults" class="space-y-3">
+                    <!-- Results will be populated here -->
+                </div>
+                
+                <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                    <div class="text-sm text-yellow-800">Best Method</div>
+                    <div class="text-lg font-bold text-yellow-700" id="bestMethod"></div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div id="variancePlot" style="width: 100%; height: 500px;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="grid md:grid-cols-3 gap-6 mb-6">
+    <div class="card bg-green-50">
+        <h3 class="text-xl font-bold text-green-900 mb-3">Antithetic Variates</h3>
+        <div class="space-y-2">
+            <p class="text-sm text-gray-700">
+                <strong>Principle:</strong> Use pairs of negatively correlated random variables
+            </p>
+            <p class="font-mono text-xs bg-green-100 p-2 rounded">
+                For each z ~ N(0,1), also use -z
+            </p>
+            <ul class="text-sm text-gray-700 list-disc ml-5">
+                <li>Variance reduction: 30-50%</li>
+                <li>No additional computational cost</li>
+                <li>Works well for monotonic payoff functions</li>
+                <li>Easy to implement</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card bg-blue-50">
+        <h3 class="text-xl font-bold text-blue-900 mb-3">Control Variates</h3>
+        <div class="space-y-2">
+            <p class="text-sm text-gray-700">
+                <strong>Principle:</strong> Use known expectation to reduce variance
+            </p>
+            <p class="font-mono text-xs bg-blue-100 p-2 rounded">
+                Y = X - θ(Z - E[Z])
+            </p>
+            <ul class="text-sm text-gray-700 list-disc ml-5">
+                <li>Variance reduction: 50-90%</li>
+                <li>Requires good control variable</li>
+                <li>Optimal θ = Cov(X,Z)/Var(Z)</li>
+                <li>Stock price often used as control</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card bg-purple-50">
+        <h3 class="text-xl font-bold text-purple-900 mb-3">Importance Sampling</h3>
+        <div class="space-y-2">
+            <p class="text-sm text-gray-700">
+                <strong>Principle:</strong> Change probability measure to focus on important regions
+            </p>
+            <p class="font-mono text-xs bg-purple-100 p-2 rounded">
+                E[f(X)] = E[f(Y) * dP/dQ]
+            </p>
+            <ul class="text-sm text-gray-700 list-disc ml-5">
+                <li>Excellent for rare events</li>
+                <li>Complex to implement</li>
+                <li>Requires measure transformation</li>
+                <li>Used in VaR calculations</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="grid md:grid-cols-2 gap-6">
+    <div class="card bg-red-50">
+        <h3 class="text-xl font-bold text-red-900 mb-2">Theoretical Foundation</h3>
+        
+        <div class="space-y-4">
+            <div>
+                <p class="font-semibold text-red-800 mb-1">Variance Reduction Ratio</p>
+                <p class="font-mono text-sm bg-red-100 p-2 rounded">
+                    VRR = Var(standard) / Var(reduced)
+                </p>
+                <p class="text-sm text-gray-700 mt-1">
+                    Higher VRR means more efficient simulation
+                </p>
+            </div>
+            
+            <div>
+                <p class="font-semibold text-red-800 mb-1">Efficiency Gain</p>
+                <p class="font-mono text-sm bg-red-100 p-2 rounded">
+                    Efficiency = 1 / (Cost × Variance)
+                </p>
+                <p class="text-sm text-gray-700 mt-1">
+                    Considers both computational cost and variance
+                </p>
+            </div>
+            
+            <div>
+                <p class="font-semibold text-red-800 mb-1">Optimal Control Variate</p>
+                <p class="font-mono text-sm bg-red-100 p-2 rounded">
+                    θ* = Cov(X,Y) / Var(Y)
+                </p>
+                <p class="text-sm text-gray-700 mt-1">
+                    Minimizes variance of controlled estimator
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-orange-50">
+        <h3 class="text-xl font-bold text-orange-900 mb-2">Practical Considerations</h3>
+        
+        <div class="space-y-3">
+            <div>
+                <p class="font-semibold text-orange-800">When to Use Each Method</p>
+                <ul class="text-sm text-gray-700 list-disc ml-5">
+                    <li><strong>Antithetic:</strong> Always use if applicable (free improvement)</li>
+                    <li><strong>Control Variates:</strong> When good control variable available</li>
+                    <li><strong>Importance Sampling:</strong> For rare events or tail probabilities</li>
+                    <li><strong>Stratified Sampling:</strong> When natural stratification exists</li>
+                </ul>
+            </div>
+            
+            <div>
+                <p class="font-semibold text-orange-800">Implementation Tips</p>
+                <ul class="text-sm text-gray-700 list-disc ml-5">
+                    <li>Combine methods for maximum effect</li>
+                    <li>Test variance reduction empirically</li>
+                    <li>Consider computational overhead</li>
+                    <li>Validate with known test cases</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card bg-teal-50">
+    <h3 class="text-xl font-bold text-teal-900 mb-3">Academic References</h3>
+    
+    <div class="grid md:grid-cols-2 gap-4">
+        <div class="p-3 bg-white rounded-lg">
+            <p class="font-semibold text-teal-800">Glasserman (2003)</p>
+            <p class="text-sm text-gray-700">
+                "Monte Carlo Methods in Financial Engineering" provides comprehensive coverage of variance reduction techniques with financial applications.
+            </p>
+        </div>
+        
+        <div class="p-3 bg-white rounded-lg">
+            <p class="font-semibold text-teal-800">Boyle (1977)</p>
+            <p class="text-sm text-gray-700">
+                Pioneering work on Monte Carlo methods for option pricing, introducing antithetic variates to finance.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function compareVarianceMethods() {
+    const selectedMethods = Array.from(document.querySelectorAll('input[name="methods"]:checked'))
+        .map(checkbox => checkbox.value);
+    
+    if (selectedMethods.length === 0) {
+        showError('Please select at least one method to compare');
+        return;
+    }
+    
+    const params = {
+        S0: parseFloat(document.getElementById('S0').value),
+        K: parseFloat(document.getElementById('K').value),
+        T: parseFloat(document.getElementById('T').value),
+        r: parseFloat(document.getElementById('r').value),
+        sigma: parseFloat(document.getElementById('sigma').value),
+        simulations: parseInt(document.getElementById('simulations').value)
+    };
+    
+    const compareBtn = document.getElementById('compareBtn');
+    compareBtn.disabled = true;
+    showLoading('loading');
+    document.getElementById('results').style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/compare-variance-methods', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params)
+        });
+        
+        const data = await response.json();
+        
+        // Update results display
+        const methodResults = document.getElementById('methodResults');
+        methodResults.innerHTML = '';
+        
+        let bestMethod = null;
+        let bestVariance = Infinity;
+        
+        for (const [method, results] of Object.entries(data)) {
+            if (!selectedMethods.includes(method)) continue;
+            
+            const varianceReduction = method === 'standard' ? 1 : 
+                data.standard.variance / results.variance;
+            
+            const card = document.createElement('div');
+            card.className = 'p-3 bg-white rounded-lg border';
+            card.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-semibold capitalize">${method}</span>
+                    <span class="text-sm px-2 py-1 rounded ${
+                        method === 'standard' ? 'bg-gray-100 text-gray-700' :
+                        method === 'antithetic' ? 'bg-green-100 text-green-700' :
+                        'bg-blue-100 text-blue-700'
+                    }">
+                        ${(varianceReduction).toFixed(1)}x improvement
+                    </span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-xs">
+                    <div>
+                        <div class="text-gray-600">Price</div>
+                        <div class="font-medium">$${results.mean.toFixed(4)}</div>
+                    </div>
+                    <div>
+                        <div class="text-gray-600">Std Dev</div>
+                        <div class="font-medium">${results.std.toFixed(6)}</div>
+                    </div>
+                    <div>
+                        <div class="text-gray-600">Variance</div>
+                        <div class="font-medium">${results.variance.toFixed(8)}</div>
+                    </div>
+                </div>
+            `;
+            methodResults.appendChild(card);
+            
+            if (results.variance < bestVariance) {
+                bestVariance = results.variance;
+                bestMethod = method;
+            }
+        }
+        
+        document.getElementById('bestMethod').textContent = 
+            bestMethod.charAt(0).toUpperCase() + bestMethod.slice(1) + 
+            ` (${(data.standard.variance / bestVariance).toFixed(1)}x better than standard)`;
+        
+        document.getElementById('results').style.display = 'block';
+        
+        // Create variance comparison plot
+        const methods = selectedMethods;
+        const variances = methods.map(method => data[method].variance);
+        
+        const trace = {
+            x: methods,
+            y: variances,
+            type: 'bar',
+            marker: {
+                color: methods.map(method => 
+                    method === 'standard' ? '#ef4444' :
+                    method === 'antithetic' ? '#10b981' : '#3b82f6'
+                )
+            }
+        };
+        
+        const layout = {
+            title: 'Variance Comparison Across Methods',
+            xaxis: { title: 'Method' },
+            yaxis: { title: 'Variance', type: 'log' },
+            showlegend: false
+        };
+        
+        Plotly.newPlot('variancePlot', [trace], layout);
+        
+    } catch (error) {
+        showError(error.message);
+    } finally {
+        hideLoading('loading');
+        compareBtn.disabled = false;
+    }
+}
+</script>
+{% endblock %}

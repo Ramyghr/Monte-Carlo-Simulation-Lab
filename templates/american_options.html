@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}American Options - Monte Carlo Lab{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 class="text-2xl font-bold text-indigo-900 mb-4">American Option Pricing</h2>
+    <p class="text-gray-700 mb-4">
+        Price American options using the Longstaff-Schwartz Monte Carlo method. American options can be exercised at any time before expiration, making early exercise premium an important component of their value.
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-6">
+        <div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Initial Price (S₀)
+                    </label>
+                    <input type="number" id="S0" value="100" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Strike Price (K)
+                    </label>
+                    <input type="number" id="K" value="100" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Time to Maturity (T)
+                    </label>
+                    <input type="number" id="T" value="1" step="0.1" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Risk-free Rate (r)
+                    </label>
+                    <input type="number" id="r" value="0.05" step="0.01" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Volatility (σ)
+                    </label>
+                    <input type="number" id="sigma" value="0.2" step="0.01" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Time Steps
+                    </label>
+                    <input type="number" id="steps" value="50" step="5" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Simulations
+                    </label>
+                    <input type="number" id="simulations" value="10000" step="1000" class="input-field">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Option Type
+                </label>
+                <div class="flex gap-4">
+                    <label class="flex items-center">
+                        <input type="radio" name="optionType" value="call" checked class="mr-2">
+                        Call
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="optionType" value="put" class="mr-2">
+                        Put
+                    </label>
+                </div>
+            </div>
+
+            <button onclick="priceOption()" class="btn-primary w-full mb-4" id="priceBtn">
+                Price Option
+            </button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p class="mt-2 text-gray-600">Calculating...</p>
+            </div>
+
+            <div id="results" class="bg-indigo-50 p-4 rounded-lg space-y-2" style="display: none;">
+                <div class="text-sm text-gray-600">
+                    <strong>American Option Price:</strong> $<span id="americanPrice"></span>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <strong>European Option Price:</strong> $<span id="europeanPrice"></span>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <strong>Early Exercise Premium:</strong> $<span id="earlyExercisePremium"></span>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div id="plot" style="width: 100%; height: 500px;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="card bg-yellow-50">
+    <h3 class="text-xl font-bold text-yellow-900 mb-2">Theory</h3>
+    <p class="text-gray-700 mb-3">
+        <strong>Longstaff-Schwartz Method:</strong> American option pricing uses backward induction to determine the optimal exercise policy at each time step.
+    </p>
+    <p class="font-mono text-sm mb-3">
+        V(t, S_t) = max(Φ(S_t), E[e^(-rΔt) V(t+Δt, S_{t+Δt}) | S_t])
+    </p>
+    <p class="text-gray-700 mb-3">
+        <strong>Early Exercise Premium:</strong> The additional value of American options over European options due to the right to exercise early.
+    </p>
+    <p class="font-mono text-sm mb-3">
+        American Price = European Price + Early Exercise Premium
+    </p>
+    <p class="text-gray-700">
+        The algorithm uses least squares regression to estimate continuation values at each exercise date.
+    </p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function priceOption() {
+    const params = {
+        S0: parseFloat(document.getElementById('S0').value),
+        K: parseFloat(document.getElementById('K').value),
+        T: parseFloat(document.getElementById('T').value),
+        r: parseFloat(document.getElementById('r').value),
+        sigma: parseFloat(document.getElementById('sigma').value),
+        steps: parseInt(document.getElementById('steps').value),
+        simulations: parseInt(document.getElementById('simulations').value),
+        optionType: document.querySelector('input[name="optionType"]:checked').value
+    };
+    
+    const priceBtn = document.getElementById('priceBtn');
+    priceBtn.disabled = true;
+    showLoading('loading');
+    document.getElementById('results').style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/price-american-option', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params)
+        });
+        
+        const data = await response.json();
+        
+        // Update results
+        document.getElementById('americanPrice').textContent = data.americanPrice.toFixed(4);
+        document.getElementById('europeanPrice').textContent = data.europeanPrice.toFixed(4);
+        document.getElementById('earlyExercisePremium').textContent = data.earlyExercisePremium.toFixed(4);
+        document.getElementById('results').style.display = 'block';
+        
+        // Plot sample paths
+        const traces = [];
+        data.paths.forEach((pathData, index) => {
+            const times = pathData.map(p => p.time);
+            const prices = pathData.map(p => p.price);
+            
+            traces.push({
+                x: times,
+                y: prices,
+                type: 'scatter',
+                mode: 'lines',
+                name: `Path ${index + 1}`,
+                line: { width: 2 }
+            });
+        });
+        
+        // Add strike price line
+        traces.push({
+            x: [0, params.T],
+            y: [params.K, params.K],
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Strike Price',
+            line: { 
+                color: 'red',
+                width: 2,
+                dash: 'dash'
+            }
+        });
+        
+        const layout = {
+            title: 'Sample Price Paths',
+            xaxis: { title: 'Time' },
+            yaxis: { title: 'Stock Price' },
+            showlegend: true,
+            hovermode: 'closest'
+        };
+        
+        Plotly.newPlot('plot', traces, layout);
+        
+    } catch (error) {
+        showError(error.message);
+    } finally {
+        hideLoading('loading');
+        priceBtn.disabled = false;
+    }
+}
+</script>
+{% endblock %}

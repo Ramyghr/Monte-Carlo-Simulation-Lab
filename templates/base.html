@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Monte Carlo Simulation Lab{% endblock %}</title>
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #eff6ff, #e0e7ff);
+            min-height: 100vh;
+        }
+        .nav-link {
+            transition: all 0.3s;
+        }
+        .nav-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .btn-primary {
+            background-color: #4f46e5;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            background-color: #4338ca;
+        }
+        .btn-primary:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: white;
+            border: 2px solid #e5e7eb;
+            color: #374151;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .btn-secondary:hover {
+            border-color: #4f46e5;
+            color: #4f46e5;
+        }
+        .input-field {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            margin-top: 0.25rem;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        .loading.active {
+            display: block;
+        }
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-indigo-900 mb-2">
+                Monte Carlo Simulation Laboratory
+            </h1>
+            <p class="text-lg text-indigo-700">
+                Advanced computational methods for financial engineering
+            </p>
+        </header>
+
+        <nav class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+                <a href="/" class="nav-link px-3 py-2 rounded-lg font-medium text-sm bg-gray-100 hover:bg-gray-200 text-center">
+                    Introduction
+                </a>
+                <a href="/pi-estimation" class="nav-link px-3 py-2 rounded-lg font-medium text-sm bg-gray-100 hover:bg-gray-200 text-center">
+                    Pi Estimation
+                </a>
+                <a href="/european-options" class="nav-link px-3 py-2 rounded-lg font-medium text-sm bg-gray-100 hover:bg-gray-200 text-center">
+                    European Options
+                </a>
+                <a href="/american-options" class="nav-link px-3 py-2 rounded-lg font-medium text-sm bg-gray-100 hover:bg-gray-200 text-center">
+                    American Options
+                </a>
+                <a href="/greeks" class="nav-link px-3 py-2 rounded-lg font-medium text-sm bg-gray-100 hover:bg-gray-200 text-center">
+                    Greeks
+                </a>
+                <a href="/path-generation" class="nav-link px-3 py-2 rounded-lg font-medium text-sm bg-gray-100 hover:bg-gray-200 text-center">
+                    Path Generation
+                </a>
+                <a href="/scheme-comparison" class="nav-link px-3 py-2 rounded-lg font-medium text-sm bg-gray-100 hover:bg-gray-200 text-center">
+                    Scheme Comparison
+                </a>
+                <a href="/var" class="nav-link px-3 py-2 rounded-lg font-medium text-sm bg-gray-100 hover:bg-gray-200 text-center">
+                    Value-at-Risk
+                </a>
+                <a href="/portfolio-var" class="nav-link px-3 py-2 rounded-lg font-medium text-sm bg-gray-100 hover:bg-gray-200 text-center">
+                    Portfolio VaR
+                </a>
+                <a href="/asian-options" class="nav-link px-3 py-2 rounded-lg font-medium text-sm bg-gray-100 hover:bg-gray-200 text-center">
+                    Asian Options
+                </a>
+                <a href="/barrier-options" class="nav-link px-3 py-2 rounded-lg font-medium text-sm bg-gray-100 hover:bg-gray-200 text-center">
+                    Barrier Options
+                </a>
+                <a href="/variance-reduction" class="nav-link px-3 py-2 rounded-lg font-medium text-sm bg-gray-100 hover:bg-gray-200 text-center">
+                    Variance Reduction
+                </a>
+                <a href="/convergence-analysis" class="nav-link px-3 py-2 rounded-lg font-medium text-sm bg-gray-100 hover:bg-gray-200 text-center">
+                    Convergence Analysis
+                </a>
+            </div>
+        </nav>
+
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="text-center mt-12 text-gray-600 border-t pt-6">
+            <p class="text-sm">Based on "Monte Carlo Simulation in Financial Engineering" by Chen & Hong (2008)</p>
+            <p class="text-xs text-gray-500 mt-2">Academic Research Platform for Financial Engineering Education</p>
+        </footer>
+    </div>
+
+    <script>
+        function showLoading(elementId) {
+            document.getElementById(elementId).style.display = 'block';
+        }
+
+        function hideLoading(elementId) {
+            document.getElementById(elementId).style.display = 'none';
+        }
+
+        function showError(message) {
+            // Create a more sophisticated error notification
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg z-50';
+            errorDiv.innerHTML = `
+                <div class="flex items-center">
+                    <div class="py-1">
+                        <svg class="w-6 h-6 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <strong class="font-bold">Error: </strong>
+                        <span class="block sm:inline">${message}</span>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-auto">
+                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(errorDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (errorDiv.parentElement) {
+                    errorDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Utility function for formatting numbers
+        function formatNumber(num, decimals = 4) {
+            return parseFloat(num).toFixed(decimals);
+        }
+
+        // Utility function for currency formatting
+        function formatCurrency(amount) {
+            if (amount >= 1000000) {
+                return '$' + (amount / 1000000).toFixed(1) + 'M';
+            } else if (amount >= 1000) {
+                return '$' + (amount / 1000).toFixed(0) + 'K';
+            } else {
+                return '$' + amount.toFixed(0);
+            }
+        }
+
+        // Smooth scrolling for anchor links
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+
+{% block title %}Value at Risk - Monte Carlo Lab{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 class="text-2xl font-bold text-indigo-900 mb-4">Value at Risk (VaR) Calculation</h2>
+    <p class="text-gray-700 mb-4">
+        Calculate Value at Risk and Conditional Value at Risk using Monte Carlo simulation. 
+        Based on the risk management framework from Chen and Hong (2008) and Glasserman et al. (2000).
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-6">
+        <div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Portfolio Value ($)
+                    </label>
+                    <input type="number" id="portfolioValue" value="1000000" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Expected Return (μ)
+                    </label>
+                    <input type="number" id="mu" value="0.08" step="0.01" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Volatility (σ)
+                    </label>
+                    <input type="number" id="sigma" value="0.25" step="0.01" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Time Horizon (days)
+                    </label>
+                    <input type="number" id="days" value="10" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Confidence Level
+                    </label>
+                    <select id="confidence" class="input-field">
+                        <option value="0.95">95%</option>
+                        <option value="0.99" selected>99%</option>
+                        <option value="0.995">99.5%</option>
+                        <option value="0.999">99.9%</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Simulations
+                    </label>
+                    <input type="number" id="simulations" value="10000" class="input-field">
+                </div>
+            </div>
+
+            <button onclick="calculateVaR()" class="btn-primary w-full mb-4" id="calculateBtn">
+                Calculate VaR
+            </button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p class="mt-2 text-gray-600">Calculating risk measures...</p>
+            </div>
+
+            <div id="results" class="bg-indigo-50 p-4 rounded-lg space-y-3" style="display: none;">
+                <h3 class="font-bold text-lg text-indigo-800">Risk Measures</h3>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center p-3 bg-white rounded-lg border-2 border-red-200">
+                        <div class="text-sm text-gray-600">Value at Risk (VaR)</div>
+                        <div class="text-xl font-bold text-red-600" id="varValue"></div>
+                        <div class="text-xs text-gray-500" id="varConfidence"></div>
+                    </div>
+                    <div class="text-center p-3 bg-white rounded-lg border-2 border-orange-200">
+                        <div class="text-sm text-gray-600">Conditional VaR</div>
+                        <div class="text-xl font-bold text-orange-600" id="cvarValue"></div>
+                        <div class="text-xs text-gray-500">Expected Shortfall</div>
+                    </div>
+                </div>
+                
+                <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                    <div class="text-sm text-yellow-800">Portfolio Protection</div>
+                    <div class="text-lg font-bold text-yellow-700" id="protectionLevel"></div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div id="lossDistribution" style="width: 100%; height: 500px;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="grid md:grid-cols-2 gap-6">
+    <div class="card bg-red-50">
+        <h3 class="text-xl font-bold text-red-900 mb-3">VaR Methodology</h3>
+        
+        <div class="mb-4">
+            <p class="font-semibold text-red-800 mb-2">Definition</p>
+            <p class="text-sm text-gray-700 mb-2">
+                Value at Risk (VaR) is the maximum loss not exceeded with a given probability 
+                over a given period of time.
+            </p>
+            <p class="font-mono text-sm bg-red-100 p-2 rounded">
+                P(L > VaR_α) = 1 - α
+            </p>
+        </div>
+
+        <div class="mb-4">
+            <p class="font-semibold text-red-800 mb-2">Monte Carlo Simulation</p>
+            <ul class="text-sm text-gray-700 list-disc ml-5">
+                <li>Simulate portfolio returns using Geometric Brownian Motion</li>
+                <li>Calculate losses for each simulation</li>
+                <li>Sort losses and find α-quantile</li>
+                <li>Conditional VaR averages losses beyond VaR</li>
+            </ul>
+        </div>
+
+        <div class="p-3 bg-red-100 rounded">
+            <p class="text-sm text-red-800 font-semibold">Mathematical Foundation:</p>
+            <p class="text-xs text-red-700">
+                Portfolio value: V_T = V₀ exp((μ - σ²/2)Δt + σ√Δt·Z)<br>
+                Loss: L = V₀ - V_T
+            </p>
+        </div>
+    </div>
+
+    <div class="card bg-blue-50">
+        <h3 class="text-xl font-bold text-blue-900 mb-3">Risk Interpretation</h3>
+        
+        <div class="space-y-4">
+            <div>
+                <p class="font-semibold text-blue-800 mb-1">99% VaR Example</p>
+                <p class="text-sm text-gray-700">
+                    "We are 99% confident that we will not lose more than $X over the next N days."
+                </p>
+            </div>
+            
+            <div>
+                <p class="font-semibold text-blue-800 mb-1">Conditional VaR (CVaR)</p>
+                <p class="text-sm text-gray-700">
+                    Also known as Expected Shortfall. Average loss in the worst (1-α)% of cases.
+                    Provides better tail risk assessment than VaR alone.
+                </p>
+            </div>
+            
+            <div>
+                <p class="font-semibold text-blue-800 mb-1">Regulatory Context</p>
+                <p class="text-sm text-gray-700">
+                    Basel Accords require banks to calculate VaR for market risk capital requirements.
+                    Typically use 99% confidence over 10-day horizon.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card bg-green-50">
+    <h3 class="text-xl font-bold text-green-900 mb-3">Advanced VaR Methods</h3>
+    
+    <div class="grid md:grid-cols-2 gap-6">
+        <div>
+            <p class="font-semibold text-green-800 mb-2">Importance Sampling</p>
+            <p class="text-sm text-gray-700 mb-3">
+                Variance reduction technique for efficient tail risk estimation, 
+                especially useful for high confidence levels (99%, 99.9%).
+            </p>
+            
+            <div class="bg-white p-3 rounded-lg mb-3">
+                <p class="font-semibold text-green-700 mb-1">Delta-Gamma Approximation</p>
+                <p class="text-xs text-gray-700">
+                    Q = a + bᵀZ + ZᵀΛZ<br>
+                    Uses portfolio Greeks for efficient importance sampling
+                </p>
+            </div>
+            
+            <ul class="text-sm text-gray-700 list-disc ml-5">
+                <li>Exponentially twist the distribution</li>
+                <li>Focus sampling on tail region</li>
+                <li>Dramatically reduces variance for rare events</li>
+                <li>Asymptotically optimal for large losses</li>
+            </ul>
+        </div>
+        
+        <div>
+            <p class="font-semibold text-green-800 mb-2">Practical Considerations</p>
+            
+            <div class="space-y-3">
+                <div class="p-3 bg-white rounded-lg">
+                    <p class="font-semibold text-gray-700 mb-1">Advantages</p>
+                    <ul class="text-xs text-gray-700 list-disc ml-5">
+                        <li>Intuitive and widely accepted</li>
+                        <li>Captures nonlinearities and complex dependencies</li>
+                        <li>Works with any return distribution</li>
+                        <li>Flexible for different time horizons</li>
+                    </ul>
+                </div>
+                
+                <div class="p-3 bg-white rounded-lg">
+                    <p class="font-semibold text-gray-700 mb-1">Limitations</p>
+                    <ul class="text-xs text-gray-700 list-disc ml-5">
+                        <li>Does not measure worst-case loss</li>
+                        <li>Assumes normal market conditions</li>
+                        <li>Model risk in distribution assumptions</li>
+                        <li>Computationally intensive for large portfolios</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mt-3 p-3 bg-green-100 rounded">
+                <p class="text-xs text-green-800">
+                    <strong>Reference:</strong> Glasserman, Heidelberger & Shahabuddin (2000) - 
+                    "Variance reduction techniques for estimating value-at-risk"
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card bg-purple-50">
+    <h3 class="text-xl font-bold text-purple-900 mb-3">Risk Management Applications</h3>
+    
+    <div class="grid md:grid-cols-3 gap-4">
+        <div class="text-center p-4 bg-white rounded-lg">
+            <div class="text-2xl text-purple-600 mb-2">📊</div>
+            <p class="font-semibold text-purple-800">Portfolio Optimization</p>
+            <p class="text-sm text-gray-700 mt-2">
+                Use VaR constraints to build efficient portfolios balancing return and risk
+            </p>
+        </div>
+        
+        <div class="text-center p-4 bg-white rounded-lg">
+            <div class="text-2xl text-purple-600 mb-2">🏛️</div>
+            <p class="font-semibold text-purple-800">Regulatory Compliance</p>
+            <p class="text-sm text-gray-700 mt-2">
+                Meet capital requirements under Basel III/IV frameworks
+            </p>
+        </div>
+        
+        <div class="text-center p-4 bg-white rounded-lg">
+            <div class="text-2xl text-purple-600 mb-2">🛡️</div>
+            <p class="font-semibold text-purple-800">Risk Limits</p>
+            <p class="text-sm text-gray-700 mt-2">
+                Set and monitor trading limits based on VaR calculations
+            </p>
+        </div>
+    </div>
+    
+    <div class="mt-4 p-3 bg-purple-100 rounded">
+        <p class="text-sm text-purple-800">
+            <strong>Industry Practice:</strong> Most financial institutions use a combination of 
+            parametric, historical, and Monte Carlo VaR methods for comprehensive risk assessment.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function calculateVaR() {
+    const params = {
+        portfolioValue: parseFloat(document.getElementById('portfolioValue').value),
+        mu: parseFloat(document.getElementById('mu').value),
+        sigma: parseFloat(document.getElementById('sigma').value),
+        days: parseInt(document.getElementById('days').value),
+        confidence: parseFloat(document.getElementById('confidence').value),
+        simulations: parseInt(document.getElementById('simulations').value)
+    };
+    
+    const calculateBtn = document.getElementById('calculateBtn');
+    calculateBtn.disabled = true;
+    showLoading('loading');
+    document.getElementById('results').style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/calculate-var', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params)
+        });
+        
+        const data = await response.json();
+        
+        // Update results
+        document.getElementById('varValue').textContent = '$' + data.var.toFixed(2);
+        document.getElementById('cvarValue').textContent = '$' + data.cvar.toFixed(2);
+        document.getElementById('varConfidence').textContent = data.confidence + '% Confidence';
+        
+        const protectionLevel = ((1 - data.var / params.portfolioValue) * 100).toFixed(1);
+        document.getElementById('protectionLevel').textContent = protectionLevel + '% of portfolio protected';
+        
+        document.getElementById('results').style.display = 'block';
+        
+        // Create loss distribution plot
+        const trace = {
+            x: data.losses,
+            type: 'histogram',
+            name: 'Loss Distribution',
+            marker: { color: '#4f46e5' },
+            opacity: 0.7,
+            nbinsx: 50
+        };
+        
+        // Add VaR line
+        const varLine = {
+            x: [data.var, data.var],
+            y: [0, 1],
+            type: 'scatter',
+            mode: 'lines',
+            name: 'VaR ' + data.confidence + '%',
+            line: { color: '#ef4444', width: 3, dash: 'dash' }
+        };
+        
+        // Add CVaR line
+        const cvarLine = {
+            x: [data.cvar, data.cvar],
+            y: [0, 1],
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Conditional VaR',
+            line: { color: '#f59e0b', width: 3, dash: 'dash' }
+        };
+        
+        const layout = {
+            title: 'Portfolio Loss Distribution',
+            xaxis: { 
+                title: 'Loss Amount ($)',
+                gridcolor: '#e5e7eb'
+            },
+            yaxis: { 
+                title: 'Frequency',
+                gridcolor: '#e5e7eb'
+            },
+            plot_bgcolor: '#f8fafc',
+            paper_bgcolor: '#f8fafc',
+            showlegend: true,
+            shapes: [
+                {
+                    type: 'rect',
+                    xref: 'x',
+                    yref: 'paper',
+                    x0: data.var,
+                    x1: Math.max(...data.losses),
+                    y0: 0,
+                    y1: 1,
+                    fillcolor: '#fef2f2',
+                    opacity: 0.3,
+                    line: { width: 0 }
+                }
+            ]
+        };
+        
+        Plotly.newPlot('lossDistribution', [trace, varLine, cvarLine], layout);
+        
+    } catch (error) {
+        showError(error.message);
+    } finally {
+        hideLoading('loading');
+        calculateBtn.disabled = false;
+    }
+}
+
+// Calculate VaR on page load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(calculateVaR, 500);
+});
+</script>
+{% endblock %}

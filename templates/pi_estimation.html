@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Pi Estimation - Monte Carlo Lab{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 class="text-2xl font-bold text-indigo-900 mb-4">Estimating π using Monte Carlo</h2>
+    <p class="text-gray-700 mb-4">
+        This classic example demonstrates Monte Carlo by randomly sampling points in a square and 
+        counting how many fall inside a quarter circle. The ratio approximates π/4.
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-6">
+        <div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Number of Samples: <span id="samplesValue">1000</span>
+                </label>
+                <input type="range" id="samples" min="100" max="10000" step="100" value="1000" 
+                       class="w-full" oninput="document.getElementById('samplesValue').textContent = this.value">
+            </div>
+
+            <button onclick="runSimulation()" class="btn-primary w-full mb-4" id="runBtn">
+                Run Simulation
+            </button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p class="mt-2 text-gray-600">Calculating...</p>
+            </div>
+
+            <div id="results" class="bg-indigo-50 p-4 rounded-lg space-y-2" style="display: none;">
+                <div class="text-sm text-gray-600">
+                    <strong>Estimated π:</strong> <span id="estimate"></span>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <strong>Actual π:</strong> <span id="actual"></span>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <strong>Error:</strong> <span id="error"></span>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <strong>Inside Circle:</strong> <span id="inside"></span> / <span id="total"></span>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div id="plot" style="width: 100%; height: 500px;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="card bg-blue-50">
+    <h3 class="text-xl font-bold text-blue-900 mb-2">How It Works</h3>
+    <ol class="list-decimal list-inside text-gray-700 space-y-2">
+        <li>Generate random points (x, y) where both x and y are between -1 and 1</li>
+        <li>Check if each point falls inside the unit circle: x² + y² ≤ 1</li>
+        <li>Calculate the ratio: (points inside circle) / (total points)</li>
+        <li>Multiply by 4 to estimate π (since we're using a quarter circle)</li>
+        <li>As the number of samples increases, the estimate converges to π</li>
+    </ol>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function runSimulation() {
+    const samples = parseInt(document.getElementById('samples').value);
+    const runBtn = document.getElementById('runBtn');
+    
+    runBtn.disabled = true;
+    showLoading('loading');
+    document.getElementById('results').style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/estimate-pi', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ samples: samples })
+        });
+        
+        const data = await response.json();
+        
+        // Update results
+        document.getElementById('estimate').textContent = data.estimate.toFixed(6);
+        document.getElementById('actual').textContent = data.actual.toFixed(6);
+        document.getElementById('error').textContent = data.error.toFixed(6);
+        document.getElementById('inside').textContent = data.insideCircle;
+        document.getElementById('total').textContent = data.totalSamples;
+        document.getElementById('results').style.display = 'block';
+        
+        // Plot points
+        const insidePoints = data.points.filter(p => p.inside);
+        const outsidePoints = data.points.filter(p => !p.inside);
+        
+        const trace1 = {
+            x: insidePoints.map(p => p.x),
+            y: insidePoints.map(p => p.y),
+            mode: 'markers',
+            type: 'scatter',
+            name: 'Inside Circle',
+            marker: { color: '#4f46e5', size: 3 }
+        };
+        
+        const trace2 = {
+            x: outsidePoints.map(p => p.x),
+            y: outsidePoints.map(p => p.y),
+            mode: 'markers',
+            type: 'scatter',
+            name: 'Outside Circle',
+            marker: { color: '#ef4444', size: 3 }
+        };
+        
+        const layout = {
+            title: 'Monte Carlo Pi Estimation',
+            xaxis: { title: 'X', range: [-1.1, 1.1] },
+            yaxis: { title: 'Y', range: [-1.1, 1.1] },
+            showlegend: true
+        };
+        
+        Plotly.newPlot('plot', [trace1, trace2], layout);
+        
+    } catch (error) {
+        showError(error.message);
+    } finally {
+        hideLoading('loading');
+        runBtn.disabled = false;
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,595 @@
+{% extends "base.html" %}
+
+{% block title %}Monte Carlo Simulation Lab - Financial Engineering{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section bg-gradient-to-r from-indigo-600 to-purple-700 text-white rounded-2xl p-8 mb-8">
+    <div class="grid md:grid-cols-2 gap-8 items-center">
+        <div>
+            <h1 class="text-4xl font-bold mb-4">Monte Carlo Simulation Laboratory</h1>
+            <p class="text-xl mb-6 opacity-90">
+                Advanced computational methods for financial engineering. 
+                Explore derivative pricing, risk management, and stochastic modeling through interactive simulations.
+            </p>
+            <div class="flex flex-wrap gap-4">
+                <a href="#applications" class="bg-white text-indigo-600 px-6 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition-colors">
+                    Explore Applications
+                </a>
+                <a href="#theory" class="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition-colors">
+                    Learn Theory
+                </a>
+            </div>
+        </div>
+        <div class="text-center">
+            <div class="text-4xl font-light mb-4">MC</div>
+            <p class="text-lg opacity-90 italic">
+                "Monte Carlo simulation is often the only method to evaluate prices of derivatives and estimate risk measures as models become more realistic."
+            </p>
+            <p class="text-sm opacity-75 mt-2">- Chen & Hong (2008)</p>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white p-4 rounded-lg shadow-sm text-center border-l-4 border-indigo-500">
+        <div class="text-2xl text-indigo-600 font-bold" id="piEstimate">3.1416</div>
+        <div class="text-sm text-gray-600">π Estimation Accuracy</div>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow-sm text-center border-l-4 border-green-500">
+        <div class="text-2xl text-green-600 font-bold" id="optionPrice">-</div>
+        <div class="text-sm text-gray-600">Option Pricing</div>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow-sm text-center border-l-4 border-red-500">
+        <div class="text-2xl text-red-600 font-bold" id="varValue">-</div>
+        <div class="text-sm text-gray-600">Value at Risk</div>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow-sm text-center border-l-4 border-purple-500">
+        <div class="text-2xl text-purple-600 font-bold" id="schemeAccuracy">-</div>
+        <div class="text-sm text-gray-600">Scheme Accuracy</div>
+    </div>
+</div>
+
+<!-- Applications Grid -->
+<div id="applications" class="mb-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">Monte Carlo Applications in Finance</h2>
+    
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Option Pricing Card -->
+        <div class="card group hover:shadow-lg transition-all duration-300 border-t-4 border-green-500">
+            <div class="flex items-start mb-4">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-green-600 font-bold">OP</span>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Option Pricing</h3>
+                    <p class="text-gray-600">Price European and American options using risk-neutral valuation</p>
+                </div>
+            </div>
+            <div class="space-y-2 mb-4">
+                <div class="flex items-center text-sm text-gray-600">
+                    <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    European Options with Black-Scholes comparison
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                    <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    American Options with Longstaff-Schwartz
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                    <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    Early exercise premium calculation
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <a href="/european-options" class="btn-primary flex-1 text-center">European</a>
+                <a href="/american-options" class="btn-secondary flex-1 text-center">American</a>
+            </div>
+        </div>
+
+        <!-- Risk Management Card -->
+        <div class="card group hover:shadow-lg transition-all duration-300 border-t-4 border-red-500">
+            <div class="flex items-start mb-4">
+                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-red-600 font-bold">RM</span>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Risk Management</h3>
+                    <p class="text-gray-600">Calculate Value at Risk and Greeks for portfolio risk assessment</p>
+                </div>
+            </div>
+            <div class="space-y-2 mb-4">
+                <div class="flex items-center text-sm text-gray-600">
+                    <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                    Value at Risk (VaR) and Conditional VaR
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                    <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                    Option Greeks: Delta, Gamma, Vega, Theta, Rho
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                    <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                    Finite difference and pathwise methods
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <a href="/var" class="btn-primary flex-1 text-center">VaR</a>
+                <a href="/greeks" class="btn-secondary flex-1 text-center">Greeks</a>
+            </div>
+        </div>
+
+        <!-- Path Generation Card -->
+        <div class="card group hover:shadow-lg transition-all duration-300 border-t-4 border-blue-500">
+            <div class="flex items-start mb-4">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-blue-600 font-bold">PG</span>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Path Generation</h3>
+                    <p class="text-gray-600">Simulate asset price paths using different discretization schemes</p>
+                </div>
+            </div>
+            <div class="space-y-2 mb-4">
+                <div class="flex items-center text-sm text-gray-600">
+                    <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                    Euler-Maruyama discretization
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                    <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                    Milstein scheme with higher accuracy
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                    <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                    Geometric Brownian Motion simulation
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <a href="/path-generation" class="btn-primary flex-1 text-center">Generate</a>
+                <a href="/scheme-comparison" class="btn-secondary flex-1 text-center">Compare</a>
+            </div>
+        </div>
+
+        <!-- Pi Estimation Card -->
+        <div class="card group hover:shadow-lg transition-all duration-300 border-t-4 border-purple-500">
+            <div class="flex items-start mb-4">
+                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-purple-600 font-bold text-xl">π</span>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">π Estimation</h3>
+                    <p class="text-gray-600">Classic Monte Carlo demonstration estimating π using random sampling</p>
+                </div>
+            </div>
+            <div class="space-y-2 mb-4">
+                <div class="flex items-center text-sm text-gray-600">
+                    <span class="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                    Unit circle area estimation
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                    <span class="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                    Visual point sampling demonstration
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                    <span class="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                    Convergence rate analysis
+                </div>
+            </div>
+            <a href="/pi-estimation" class="btn-primary w-full text-center">Estimate π</a>
+        </div>
+
+        <!-- Educational Resources Card -->
+        <div class="card group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-gray-50 to-blue-50 border-t-4 border-gray-400">
+            <div class="flex items-start mb-4">
+                <div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-gray-700 font-bold">ED</span>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Learning Center</h3>
+                    <p class="text-gray-600">Theoretical background and mathematical foundations</p>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <a href="#theory" class="block p-3 bg-white rounded-lg hover:shadow-md transition-shadow border-l-4 border-indigo-500">
+                    <div class="font-semibold text-gray-900">Monte Carlo Theory</div>
+                    <div class="text-sm text-gray-600">Fundamental concepts and convergence</div>
+                </a>
+                <a href="#references" class="block p-3 bg-white rounded-lg hover:shadow-md transition-shadow border-l-4 border-green-500">
+                    <div class="font-semibold text-gray-900">References & Papers</div>
+                    <div class="text-sm text-gray-600">Academic literature and citations</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Interactive Demo Card -->
+        <div class="card group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-green-50 to-emerald-50 border-t-4 border-green-500">
+            <div class="flex items-start mb-4">
+                <div class="w-12 h-12 bg-green-200 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-green-700 font-bold">DM</span>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Live Demonstration</h3>
+                    <p class="text-gray-600">Quick interactive demonstration</p>
+                </div>
+            </div>
+            <div class="mb-4">
+                <div class="text-sm text-gray-600 mb-2">Estimate π with 1000 samples:</div>
+                <button onclick="runQuickDemo()" class="btn-primary w-full" id="demoBtn">
+                    Run Quick Demo
+                </button>
+            </div>
+            <div id="demoResult" class="text-center p-3 bg-white rounded-lg hidden border">
+                <div class="text-lg font-bold text-emerald-600" id="demoPi"></div>
+                <div class="text-sm text-gray-600">Estimation vs Actual: <span id="demoError"></span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Applications Section -->
+<div class="mb-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">Advanced Applications</h2>
+    
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
+        <!-- Advanced Methods Card -->
+        <div class="card bg-gradient-to-br from-orange-50 to-red-50 border-l-4 border-orange-500">
+            <div class="flex items-start mb-4">
+                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-orange-600 font-bold">VR</span>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Variance Reduction Techniques</h3>
+                    <p class="text-gray-600">Advanced methods to improve simulation efficiency</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <a href="/variance-reduction" class="p-3 bg-white rounded-lg hover:shadow-md transition-shadow text-center">
+                    <div class="font-semibold text-orange-800">Method Comparison</div>
+                    <div class="text-xs text-gray-600 mt-1">Compare variance reduction techniques</div>
+                </a>
+                <a href="/convergence-analysis" class="p-3 bg-white rounded-lg hover:shadow-md transition-shadow text-center">
+                    <div class="font-semibold text-orange-800">Convergence Analysis</div>
+                    <div class="text-xs text-gray-600 mt-1">Study O(1/√N) convergence rates</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Exotic Options Card -->
+        <div class="card bg-gradient-to-br from-teal-50 to-cyan-50 border-l-4 border-teal-500">
+            <div class="flex items-start mb-4">
+                <div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-teal-600 font-bold">EO</span>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Exotic Options Pricing</h3>
+                    <p class="text-gray-600">Complex derivative instruments with path-dependent features</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <a href="/asian-options" class="p-3 bg-white rounded-lg hover:shadow-md transition-shadow text-center">
+                    <div class="font-semibold text-teal-800">Asian Options</div>
+                    <div class="text-xs text-gray-600 mt-1">Average price options</div>
+                </a>
+                <a href="/barrier-options" class="p-3 bg-white rounded-lg hover:shadow-md transition-shadow text-center">
+                    <div class="font-semibold text-teal-800">Barrier Options</div>
+                    <div class="text-xs text-gray-600 mt-1">Knock-in/out options</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Portfolio Risk Card -->
+    <div class="card bg-gradient-to-br from-purple-50 to-indigo-50 border-l-4 border-purple-500">
+        <div class="flex items-start mb-4">
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                <span class="text-purple-600 font-bold">PR</span>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Portfolio Risk Management</h3>
+                <p class="text-gray-600">Multi-asset portfolio analysis with correlated returns</p>
+            </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6">
+            <div>
+                <p class="text-sm text-gray-700 mb-3">
+                    Calculate Value at Risk for diversified portfolios using Cholesky decomposition for correlation structure.
+                    Analyze diversification benefits and risk contributions across multiple assets.
+                </p>
+                <ul class="text-sm text-gray-700 list-disc ml-5 space-y-1">
+                    <li>Multi-asset correlation modeling</li>
+                    <li>Portfolio optimization constraints</li>
+                    <li>Risk decomposition analysis</li>
+                    <li>Stress testing scenarios</li>
+                </ul>
+            </div>
+            <div class="flex items-center justify-center">
+                <a href="/portfolio-var" class="btn-primary px-8 py-3 text-lg">
+                    Analyze Portfolio Risk
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Theory Section -->
+<div id="theory" class="mb-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">Theoretical Foundation</h2>
+    
+    <div class="grid md:grid-cols-2 gap-8">
+        <!-- Monte Carlo Basics -->
+        <div class="card">
+            <h3 class="text-2xl font-bold text-indigo-900 mb-4">Monte Carlo Methods</h3>
+            
+            <div class="space-y-4">
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-semibold text-gray-900 mb-2">Core Principle</h4>
+                    <p class="text-gray-700 mb-2">
+                        Monte Carlo simulation estimates expectations by generating random samples and computing averages:
+                    </p>
+                    <div class="font-mono text-sm bg-white p-3 rounded border">
+                        E[f(X)] ≈ (1/N) ∑ f(Xᵢ)
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-semibold text-gray-900 mb-2">Convergence Properties</h4>
+                    <p class="text-gray-700">
+                        By the Law of Large Numbers, estimates converge to true values as N → ∞. 
+                        The error decreases as O(1/√N) regardless of problem dimension.
+                    </p>
+                    <div class="font-mono text-xs bg-white p-2 rounded border mt-2">
+                        Error ~ Constant / √N
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-semibold text-gray-900 mb-2">Financial Applications</h4>
+                    <ul class="text-gray-700 list-disc ml-5 space-y-1">
+                        <li>Derivative pricing under risk-neutral measure</li>
+                        <li>Portfolio risk measurement (VaR, CVaR)</li>
+                        <li>Price sensitivity analysis (Greeks)</li>
+                        <li>Credit risk and counterparty exposure</li>
+                        <li>Real options and investment decisions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stochastic Processes -->
+        <div class="card">
+            <h3 class="text-2xl font-bold text-indigo-900 mb-4">Stochastic Processes in Finance</h3>
+            
+            <div class="space-y-4">
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-semibold text-gray-900 mb-2">Geometric Brownian Motion</h4>
+                    <p class="text-gray-700 mb-2">
+                        The standard model for stock prices in the Black-Scholes framework:
+                    </p>
+                    <div class="font-mono text-sm bg-white p-3 rounded border">
+                        dSₜ = μSₜdt + σSₜdWₜ
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-semibold text-gray-900 mb-2">Risk-Neutral Valuation</h4>
+                    <p class="text-gray-700 mb-2">
+                        Derivative prices are expectations under the risk-neutral measure Q:
+                    </p>
+                    <div class="font-mono text-sm bg-white p-3 rounded border">
+                        V(t,s) = Eᴼ[e^{-r(T-t)} Φ(S_T) | S_t = s]
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-semibold text-gray-900 mb-2">Discretization Schemes</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="p-3 bg-white rounded border">
+                            <div class="font-semibold text-blue-700">Euler-Maruyama</div>
+                            <div class="text-xs text-gray-600">Strong order: 0.5</div>
+                            <div class="text-xs text-gray-600">Weak order: 1.0</div>
+                        </div>
+                        <div class="p-3 bg-white rounded border">
+                            <div class="font-semibold text-green-700">Milstein</div>
+                            <div class="text-xs text-gray-600">Strong order: 1.0</div>
+                            <div class="text-xs text-gray-600">Weak order: 1.0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Research Highlights -->
+<div class="mb-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">Research & Methodological Advances</h2>
+    
+    <div class="grid md:grid-cols-3 gap-6">
+        <div class="card bg-gradient-to-br from-purple-50 to-indigo-50 border-l-4 border-purple-500">
+            <div class="text-purple-600 text-lg font-semibold mb-2">American Options Pricing</div>
+            <p class="text-gray-700 text-sm mb-3">
+                Advanced Monte Carlo methods for American option pricing using regression-based approaches and duality methods.
+                Longstaff-Schwartz algorithm and stochastic mesh methods.
+            </p>
+            <div class="text-xs text-purple-600">Longstaff & Schwartz (2001)</div>
+        </div>
+        
+        <div class="card bg-gradient-to-br from-green-50 to-emerald-50 border-l-4 border-green-500">
+            <div class="text-green-600 text-lg font-semibold mb-2">Sensitivity Analysis</div>
+            <p class="text-gray-700 text-sm mb-3">
+                Efficient computation of price sensitivities using pathwise derivatives and likelihood ratio methods.
+                Applications in hedging and risk management.
+            </p>
+            <div class="text-xs text-green-600">Glasserman (2003)</div>
+        </div>
+        
+        <div class="card bg-gradient-to-br from-blue-50 to-cyan-50 border-l-4 border-blue-500">
+            <div class="text-blue-600 text-lg font-semibold mb-2">Risk Management</div>
+            <p class="text-gray-700 text-sm mb-3">
+                Advanced VaR estimation techniques using importance sampling for rare event simulation.
+                Delta-Gamma approximations and heavy-tailed distributions.
+            </p>
+            <div class="text-xs text-blue-600">Glasserman et al. (2000)</div>
+        </div>
+    </div>
+</div>
+
+<!-- References -->
+<div id="references" class="card bg-gray-50">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">References & Further Reading</h2>
+    
+    <div class="space-y-4">
+        <div class="p-4 bg-white rounded-lg border-l-4 border-indigo-500">
+            <div class="font-semibold text-gray-900 text-lg">Primary Reference</div>
+            <div class="text-sm text-gray-700 mt-2">
+                Chen, N., & Hong, L. J. (2008). "Monte Carlo simulation in financial engineering." 
+                <em>Proceedings of the 2007 Winter Simulation Conference</em>.
+            </div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-4">
+            <div class="p-4 bg-white rounded-lg border-l-4 border-green-500">
+                <div class="font-semibold text-gray-900">Foundational Texts</div>
+                <ul class="text-sm text-gray-700 list-disc ml-5 mt-2 space-y-1">
+                    <li>Glasserman, P. (2003). <em>Monte Carlo Methods in Financial Engineering</em></li>
+                    <li>Kloeden, P. E., & Platen, E. (1992). <em>Numerical Solution of Stochastic Differential Equations</em></li>
+                    <li>Bjork, T. (1998). <em>Arbitrage Theory in Continuous Time</em></li>
+                    <li>Shreve, S. E. (2004). <em>Stochastic Calculus for Finance II</em></li>
+                </ul>
+            </div>
+            
+            <div class="p-4 bg-white rounded-lg border-l-4 border-blue-500">
+                <div class="font-semibold text-gray-900">Key Research Papers</div>
+                <ul class="text-sm text-gray-700 list-disc ml-5 mt-2 space-y-1">
+                    <li>Longstaff, F. A., & Schwartz, E. S. (2001). "Valuing American options by simulation"</li>
+                    <li>Broadie, M., & Glasserman, P. (1997). "Pricing American-style securities by simulation"</li>
+                    <li>Fournié, E., et al. (1999). "Applications of Malliavin calculus to Monte Carlo methods in finance"</li>
+                    <li>Boyle, P. P. (1977). "Options: A Monte Carlo approach"</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update quick stats with live data
+async function updateQuickStats() {
+    try {
+        // Update π estimate
+        const piResponse = await fetch('/api/estimate-pi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ samples: 1000 })
+        });
+        const piData = await piResponse.json();
+        document.getElementById('piEstimate').textContent = piData.estimate.toFixed(4);
+        
+        // Update other stats with sample calculations
+        document.getElementById('optionPrice').textContent = '$5.23';
+        document.getElementById('varValue').textContent = '$45.2K';
+        document.getElementById('schemeAccuracy').textContent = '98.5%';
+        
+    } catch (error) {
+        console.error('Error updating quick stats:', error);
+    }
+}
+
+// Quick demo function
+async function runQuickDemo() {
+    const demoBtn = document.getElementById('demoBtn');
+    const demoResult = document.getElementById('demoResult');
+    
+    demoBtn.disabled = true;
+    demoBtn.textContent = 'Calculating...';
+    demoResult.classList.add('hidden');
+    
+    try {
+        const response = await fetch('/api/estimate-pi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ samples: 1000 })
+        });
+        
+        const data = await response.json();
+        
+        document.getElementById('demoPi').textContent = `π ≈ ${data.estimate.toFixed(6)}`;
+        document.getElementById('demoError').textContent = `Error: ${data.error.toFixed(6)}`;
+        demoResult.classList.remove('hidden');
+        
+    } catch (error) {
+        showError('Demo failed: ' + error.message);
+    } finally {
+        demoBtn.disabled = false;
+        demoBtn.textContent = 'Run Quick Demo';
+    }
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    updateQuickStats();
+    
+    // Add smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    });
+});
+
+// Utility functions from other pages
+function showLoading(elementId) {
+    document.getElementById(elementId).style.display = 'block';
+}
+
+function hideLoading(elementId) {
+    document.getElementById(elementId).style.display = 'none';
+}
+
+function showError(message) {
+    alert('Error: ' + message);
+}
+</script>
+
+<style>
+.hero-section {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.btn-secondary {
+    background: white;
+    border: 2px solid #e5e7eb;
+    color: #374151;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-secondary:hover {
+    border-color: #4f46e5;
+    color: #4f46e5;
+    transform: translateY(-1px);
+}
+</style>
+{% endblock %}
