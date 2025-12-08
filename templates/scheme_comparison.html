@@ -3,256 +3,333 @@
 {% block title %}Scheme Comparison - Monte Carlo Lab{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2 class="text-2xl font-bold text-indigo-900 mb-4">Discretization Scheme Comparison</h2>
-    <p class="text-gray-700 mb-4">
-        Compare the accuracy of Euler-Maruyama and Milstein discretization schemes for simulating stochastic differential equations.
-        Analyze convergence rates and error distributions as discussed in Chen and Hong (2008).
-    </p>
+<!-- Hero Card -->
+<div class="card border-l-4 border-indigo-500">
+    <div class="flex items-start gap-4">
+        <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
+            ⚖️
+        </div>
+        <div class="flex-1">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Discretization Scheme Comparison</h2>
+            <p class="text-gray-600 leading-relaxed">
+                Compare the accuracy of <strong>Euler-Maruyama</strong> and <strong>Milstein</strong> discretization 
+                schemes for simulating stochastic differential equations. Analyze convergence rates and error distributions 
+                as discussed in Chen and Hong (2008).
+            </p>
+        </div>
+    </div>
+</div>
 
-    <div class="grid md:grid-cols-2 gap-6">
-        <div>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Initial Price (S₀)
-                    </label>
-                    <input type="number" id="S0" value="50" min="0.01" step="0.01" class="input-field" required>
+<div class="grid lg:grid-cols-2 gap-6">
+    <!-- Parameters Panel -->
+    <div class="space-y-6">
+        <!-- SDE Parameters -->
+        <div class="card">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Drift (μ)
-                    </label>
-                    <input type="number" id="mu" value="0.08" step="0.01" min="-1" max="1" class="input-field" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Volatility (σ)
-                    </label>
-                    <input type="number" id="sigma" value="0.4" step="0.01" min="0.01" max="5" class="input-field" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Time Horizon (T)
-                    </label>
-                    <input type="number" id="T" value="1" step="0.1" min="0.01" max="50" class="input-field" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Time Steps
-                    </label>
-                    <input type="number" id="steps" value="100" min="1" max="10000" class="input-field" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Trials
-                    </label>
-                    <input type="number" id="trials" value="20000" min="100" max="1000000" class="input-field" required>
-                </div>
+                <h3 class="text-xl font-bold text-gray-900">SDE Parameters</h3>
             </div>
-
-            <button onclick="compareSchemes()" class="btn-primary w-full mb-4" id="compareBtn">
-                Compare Schemes
-            </button>
-
-            <div class="loading hidden" id="loading">
-                <div class="spinner"></div>
-                <p class="mt-2 text-gray-600">Comparing schemes... This may take a few seconds.</p>
-            </div>
-
-            <div id="errorAlert" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 hidden">
-                <div class="flex items-center">
-                    <div class="text-red-600">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800" id="errorMessage"></h3>
-                    </div>
-                </div>
-            </div>
-
-            <div id="results" class="bg-indigo-50 p-4 rounded-lg space-y-3 hidden">
-                <h3 class="font-bold text-lg text-indigo-800">Comparison Results</h3>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="text-center p-3 bg-white rounded-lg">
-                        <div class="text-sm text-gray-600">Euler MAE</div>
-                        <div class="text-lg font-bold text-red-600" id="eulerMAE"></div>
-                    </div>
-                    <div class="text-center p-3 bg-white rounded-lg">
-                        <div class="text-sm text-gray-600">Milstein MAE</div>
-                        <div class="text-lg font-bold text-green-600" id="milsteinMAE"></div>
-                    </div>
-                    <div class="text-center p-3 bg-white rounded-lg">
-                        <div class="text-sm text-gray-600">Euler RMSE</div>
-                        <div class="text-lg font-bold text-red-600" id="eulerRMSE"></div>
-                    </div>
-                    <div class="text-center p-3 bg-white rounded-lg">
-                        <div class="text-sm text-gray-600">Milstein RMSE</div>
-                        <div class="text-lg font-bold text-green-600" id="milsteinRMSE"></div>
-                    </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Initial Price (S₀) <span class="text-gray-400 font-normal">$</span>
+                    </label>
+                    <input type="number" id="S0" value="50" step="0.01" min="0.01" 
+                           class="input-field" placeholder="50.00">
+                    <p class="text-xs text-gray-500 mt-1">Starting value</p>
                 </div>
                 
-                <div class="text-center p-3 bg-yellow-50 rounded-lg">
-                    <div class="text-sm text-yellow-800">Accuracy Improvement</div>
-                    <div class="text-lg font-bold text-yellow-700" id="improvement"></div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Drift (μ) <span class="text-gray-400 font-normal">annual</span>
+                    </label>
+                    <input type="number" id="mu" value="0.08" step="0.01" min="-1" max="1"
+                           class="input-field" placeholder="0.08">
+                    <p class="text-xs text-gray-500 mt-1">Range: -1 to 1</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Volatility (σ) <span class="text-gray-400 font-normal">annual</span>
+                    </label>
+                    <input type="number" id="sigma" value="0.4" step="0.01" min="0.01" max="5"
+                           class="input-field" placeholder="0.4">
+                    <p class="text-xs text-gray-500 mt-1">Price uncertainty</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Time Horizon (T) <span class="text-gray-400 font-normal">years</span>
+                    </label>
+                    <input type="number" id="T" value="1" step="0.1" min="0.01" max="50"
+                           class="input-field" placeholder="1.0">
+                    <p class="text-xs text-gray-500 mt-1">Simulation period</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Time Steps <span class="text-gray-400 font-normal">#</span>
+                    </label>
+                    <input type="number" id="steps" value="100" step="10" min="1" max="10000"
+                           class="input-field" placeholder="100">
+                    <p class="text-xs text-gray-500 mt-1">Discretization points</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Trials <span class="text-gray-400 font-normal">#</span>
+                    </label>
+                    <input type="number" id="trials" value="20000" step="1000" min="100" max="1000000"
+                           class="input-field" placeholder="20000">
+                    <p class="text-xs text-gray-500 mt-1">Monte Carlo samples</p>
                 </div>
             </div>
         </div>
 
-        <div>
+        <!-- Parameter Guidelines -->
+        <div class="card bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200">
+            <h3 class="text-lg font-bold text-orange-900 mb-3">📋 Parameter Guidelines</h3>
+            
+            <div class="space-y-2">
+                <div class="bg-white rounded-lg p-3">
+                    <p class="font-semibold text-sm text-gray-900 mb-1">Realistic Ranges</p>
+                    <ul class="text-xs text-gray-700 space-y-1">
+                        <li>• <strong>Drift (μ):</strong> -0.2 to +0.2 (annual)</li>
+                        <li>• <strong>Volatility (σ):</strong> 0.1 to 0.6</li>
+                        <li>• <strong>Time (T):</strong> 0.1 to 5 years</li>
+                        <li>• <strong>Steps:</strong> 10 to 1000</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white rounded-lg p-3">
+                    <p class="font-semibold text-sm text-gray-900 mb-1">Expected Results</p>
+                    <ul class="text-xs text-gray-700 space-y-1">
+                        <li>• <strong>MAE:</strong> 0.1 to 2.0</li>
+                        <li>• <strong>Improvement:</strong> 20% to 50%</li>
+                        <li>• <strong>Error Ratio:</strong> 1.2x to 2.0x</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-3">
+            <button onclick="compareSchemes()" id="compareBtn" 
+                    class="btn-primary w-full text-lg py-4 flex items-center justify-center gap-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                Compare Schemes
+            </button>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div class="loading hidden" id="loading">
+            <div class="spinner"></div>
+            <p class="mt-4 text-gray-600 font-medium">Comparing schemes...</p>
+            <p class="text-sm text-gray-500 mt-2">This may take a few seconds</p>
+        </div>
+
+        <!-- Error Alert -->
+        <div id="errorAlert" class="bg-red-50 border-2 border-red-200 rounded-xl p-4 hidden">
+            <div class="flex items-start gap-3">
+                <div class="text-red-600">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-sm font-semibold text-red-800" id="errorMessage"></h3>
+                </div>
+                <button onclick="hideError()" class="text-red-600 hover:text-red-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div id="results" class="card bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 hidden">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Comparison Results</h3>
+                <span class="info-badge success-badge">
+                    ✓ Completed
+                </span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-red-500">
+                    <div class="text-xs text-gray-600 font-medium mb-1">Euler MAE</div>
+                    <div class="text-2xl font-bold text-red-600" id="eulerMAE">-</div>
+                    <div class="text-xs text-gray-500 mt-1">Mean absolute error</div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-green-500">
+                    <div class="text-xs text-gray-600 font-medium mb-1">Milstein MAE</div>
+                    <div class="text-2xl font-bold text-green-600" id="milsteinMAE">-</div>
+                    <div class="text-xs text-gray-500 mt-1">Mean absolute error</div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-red-400">
+                    <div class="text-xs text-gray-600 font-medium mb-1">Euler RMSE</div>
+                    <div class="text-2xl font-bold text-red-600" id="eulerRMSE">-</div>
+                    <div class="text-xs text-gray-500 mt-1">Root mean square error</div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-green-400">
+                    <div class="text-xs text-gray-600 font-medium mb-1">Milstein RMSE</div>
+                    <div class="text-2xl font-bold text-green-600" id="milsteinRMSE">-</div>
+                    <div class="text-xs text-gray-500 mt-1">Root mean square error</div>
+                </div>
+            </div>
+            
+            <div class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-200">
+                <div class="text-sm text-yellow-800 font-medium mb-1">Accuracy Improvement</div>
+                <div class="text-3xl font-bold text-yellow-700" id="improvement">-</div>
+                <div class="text-xs text-yellow-600 mt-1">Milstein vs Euler reduction</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visualization Panel -->
+    <div class="space-y-6">
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Error Distribution</h3>
+                <span class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-medium">
+                    First 100 Trials
+                </span>
+            </div>
             <div id="errorPlot" style="width: 100%; height: 500px;"></div>
         </div>
     </div>
 </div>
 
-<div class="grid md:grid-cols-2 gap-6">
-    <div class="card bg-blue-50">
-        <h3 class="text-xl font-bold text-blue-900 mb-3">Convergence Theory</h3>
+<!-- Theory Section -->
+<div class="grid lg:grid-cols-2 gap-6 mt-6">
+    <div class="card bg-gradient-to-br from-blue-50 to-cyan-50">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white font-bold">
+                📐
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">Convergence Theory</h3>
+        </div>
         
-        <div class="mb-4">
-            <p class="font-semibold text-blue-800 mb-2">Strong Convergence</p>
-            <p class="font-mono text-sm mb-2 bg-blue-100 p-2 rounded">
-                E[|Ŝ - S|] ≤ Chᵞ
-            </p>
-            <ul class="text-sm text-gray-700 list-disc ml-5">
-                <li><strong>Euler:</strong> γ = 0.5 (Weak convergence order 1)</li>
-                <li><strong>Milstein:</strong> γ = 1.0 (Weak convergence order 1)</li>
-            </ul>
-        </div>
-
-        <div class="mb-4">
-            <p class="font-semibold text-blue-800 mb-2">Error Metrics</p>
-            <ul class="text-sm text-gray-700 list-disc ml-5">
-                <li><strong>MAE:</strong> Mean Absolute Error</li>
-                <li><strong>RMSE:</strong> Root Mean Square Error</li>
-                <li>Both measure deviation from exact solution</li>
-            </ul>
-        </div>
-
-        <div class="p-3 bg-blue-100 rounded">
-            <p class="text-sm text-blue-800 font-semibold">Theoretical Reference:</p>
-            <p class="text-xs text-blue-700">
-                Kloeden & Platen (1992): Euler scheme has strong order 0.5, 
-                Milstein scheme achieves strong order 1.0 under smoothness conditions.
-            </p>
-        </div>
-    </div>
-
-    <div class="card bg-green-50">
-        <h3 class="text-xl font-bold text-green-900 mb-3">Methodology</h3>
-        
-        <div class="mb-4">
-            <p class="font-semibold text-green-800 mb-2">Exact Solution (GBM)</p>
-            <p class="font-mono text-xs mb-2 bg-green-100 p-2 rounded">
-                S_T = S₀ exp((μ - σ²/2)T + σW_T)
-            </p>
-            <p class="text-sm text-gray-700">
-                Closed-form solution serves as benchmark for discretization error measurement.
-            </p>
-        </div>
-
-        <div class="mb-4">
-            <p class="font-semibold text-green-800 mb-2">Discretization Schemes</p>
+        <div class="space-y-4">
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Strong Convergence</p>
+                <code class="text-sm bg-gray-100 px-3 py-2 rounded block mb-2">E[|Ŝ - S|] ≤ Chᵞ</code>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>• <strong>Euler:</strong> γ = 0.5 (Strong order 1/2)</li>
+                    <li>• <strong>Milstein:</strong> γ = 1.0 (Strong order 1)</li>
+                    <li>• Both have weak convergence order 1</li>
+                </ul>
+            </div>
             
-            <p class="text-sm font-semibold text-gray-700 mb-1">Euler-Maruyama:</p>
-            <p class="font-mono text-xs mb-2 bg-green-100 p-2 rounded">
-                Ŝ_{i+1} = Ŝ_i + μŜ_iΔt + σŜ_i√Δt·Z_i
-            </p>
-            
-            <p class="text-sm font-semibold text-gray-700 mb-1">Milstein:</p>
-            <p class="font-mono text-xs mb-2 bg-green-100 p-2 rounded">
-                Ŝ_{i+1} = Ŝ_i + μŜ_iΔt + σŜ_i√Δt·Z_i + ½σ²Ŝ_i(Z_i² - 1)Δt
-            </p>
-        </div>
-
-        <div class="p-3 bg-green-100 rounded">
-            <p class="text-sm text-green-800">
-                <strong>Note:</strong> Milstein scheme includes additional correction term 
-                that improves strong convergence from 0.5 to 1.0.
-            </p>
-        </div>
-    </div>
-</div>
-
-<div class="card bg-purple-50">
-    <h3 class="text-xl font-bold text-purple-900 mb-3">Error Analysis & Applications</h3>
-    
-    <div class="grid md:grid-cols-2 gap-6">
-        <div>
-            <p class="font-semibold text-purple-800 mb-2">When to Use Each Scheme</p>
-            <div class="space-y-3">
-                <div class="p-3 bg-white rounded-lg">
-                    <p class="font-semibold text-red-700 mb-1">Euler Scheme</p>
-                    <ul class="text-sm text-gray-700 list-disc ml-5">
-                        <li>Quick prototyping</li>
-                        <li>Multi-dimensional SDEs</li>
-                        <li>When computational speed is critical</li>
-                        <li>For weak convergence applications</li>
-                    </ul>
-                </div>
-                
-                <div class="p-3 bg-white rounded-lg">
-                    <p class="font-semibold text-green-700 mb-1">Milstein Scheme</p>
-                    <ul class="text-sm text-gray-700 list-disc ml-5">
-                        <li>Path-dependent options</li>
-                        <li>When high accuracy is required</li>
-                        <li>Barrier options pricing</li>
-                        <li>Small time steps</li>
-                    </ul>
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Error Metrics</p>
+                <div class="space-y-2">
+                    <div>
+                        <code class="text-xs bg-gray-100 px-2 py-1 rounded">MAE = (1/N)Σ|Ŝᵢ - Sᵢ|</code>
+                        <p class="text-xs text-gray-600 mt-1">Mean Absolute Error</p>
+                    </div>
+                    <div>
+                        <code class="text-xs bg-gray-100 px-2 py-1 rounded">RMSE = √[(1/N)Σ(Ŝᵢ - Sᵢ)²]</code>
+                        <p class="text-xs text-gray-600 mt-1">Root Mean Square Error</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <div>
-            <p class="font-semibold text-purple-800 mb-2">Practical Considerations</p>
-            <ul class="text-sm text-gray-700 list-disc ml-5 space-y-2">
-                <li><strong>Computational Cost:</strong> Milstein is ~20-30% more expensive per step</li>
-                <li><strong>Implementation:</strong> Euler is simpler to implement and debug</li>
-                <li><strong>Multi-dimensional:</strong> Euler extends easily, Milstein requires commutativity conditions</li>
-                <li><strong>Error Reduction:</strong> Milstein can achieve same accuracy with fewer steps</li>
-            </ul>
             
-            <div class="mt-4 p-3 bg-purple-100 rounded">
-                <p class="text-xs text-purple-800">
-                    <strong>Reference:</strong> Chen & Hong (2008) - Monte Carlo simulation in financial engineering, 
-                    Section 3: Path Generation.
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Exact Solution (GBM)</p>
+                <code class="text-xs bg-gray-100 px-2 py-1 rounded block mb-2">S_T = S₀ exp((μ - σ²/2)T + σW_T)</code>
+                <p class="text-sm text-gray-700">
+                    Closed-form solution serves as benchmark for measuring discretization error.
                 </p>
             </div>
         </div>
+        
+        <div class="mt-4 p-3 bg-blue-100 rounded-lg">
+            <p class="text-sm text-blue-800 font-semibold">Theoretical Reference:</p>
+            <p class="text-xs text-blue-700">
+                Kloeden & Platen (1992): Euler has strong order 0.5, 
+                Milstein achieves strong order 1.0 under smoothness conditions.
+            </p>
+        </div>
     </div>
-</div>
 
-<div class="card bg-orange-50">
-    <h3 class="text-xl font-bold text-orange-900 mb-3">Parameter Guidelines</h3>
-    
-    <div class="grid md:grid-cols-3 gap-4 text-sm">
-        <div>
-            <p class="font-semibold text-orange-800 mb-2">Realistic Ranges</p>
-            <ul class="text-gray-700 space-y-1">
-                <li><strong>Drift (μ):</strong> -0.2 to +0.2 (annual)</li>
-                <li><strong>Volatility (σ):</strong> 0.1 to 0.6</li>
-                <li><strong>Time (T):</strong> 0.1 to 5 years</li>
-                <li><strong>Steps:</strong> 10 to 1000</li>
-            </ul>
+    <div class="card bg-gradient-to-br from-green-50 to-emerald-50">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center text-white font-bold">
+                ⚙️
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">Methodology & Applications</h3>
         </div>
-        <div>
-            <p class="font-semibold text-orange-800 mb-2">Expected Results</p>
-            <ul class="text-gray-700 space-y-1">
-                <li><strong>MAE:</strong> 0.1 to 2.0</li>
-                <li><strong>Improvement:</strong> 20% to 50%</li>
-                <li><strong>Error Ratio:</strong> 1.2x to 2.0x</li>
-            </ul>
+        
+        <div class="space-y-4">
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Discretization Schemes</p>
+                
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-sm font-semibold text-red-700 mb-1">Euler-Maruyama:</p>
+                        <code class="text-xs bg-gray-100 px-2 py-1 rounded block">Ŝ_{i+1} = Ŝ_i + μŜ_iΔt + σŜ_i√Δt·Z_i</code>
+                    </div>
+                    
+                    <div>
+                        <p class="text-sm font-semibold text-green-700 mb-1">Milstein:</p>
+                        <code class="text-xs bg-gray-100 px-2 py-1 rounded block">+ ½σ²Ŝ_i(Z_i² - 1)Δt</code>
+                    </div>
+                </div>
+                
+                <p class="text-xs text-gray-500 mt-2">
+                    Milstein includes Itô correction term for improved strong convergence
+                </p>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">When to Use Each Scheme</p>
+                
+                <div class="space-y-2">
+                    <div class="p-2 bg-red-50 rounded">
+                        <p class="font-semibold text-xs text-red-700 mb-1">Euler Scheme</p>
+                        <ul class="text-xs text-gray-700 space-y-0.5">
+                            <li>• Quick prototyping</li>
+                            <li>• Multi-dimensional SDEs</li>
+                            <li>• Computational speed critical</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="p-2 bg-green-50 rounded">
+                        <p class="font-semibold text-xs text-green-700 mb-1">Milstein Scheme</p>
+                        <ul class="text-xs text-gray-700 space-y-0.5">
+                            <li>• Path-dependent options</li>
+                            <li>• High accuracy required</li>
+                            <li>• Barrier options pricing</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Practical Considerations</p>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>• <strong>Cost:</strong> Milstein ~20-30% more expensive</li>
+                    <li>• <strong>Implementation:</strong> Euler simpler to code</li>
+                    <li>• <strong>Multi-D:</strong> Euler extends more easily</li>
+                    <li>• <strong>Accuracy:</strong> Milstein needs fewer steps</li>
+                </ul>
+            </div>
         </div>
-        <div>
-            <p class="font-semibold text-orange-800 mb-2">Troubleshooting</p>
-            <ul class="text-gray-700 space-y-1">
-                <li>If improvement > 90%, check implementation</li>
-                <li>If errors > 10, reduce volatility or time</li>
-                <li>If results vary widely, increase trials</li>
-            </ul>
+        
+        <div class="mt-4 p-3 bg-green-100 rounded-lg">
+            <p class="text-xs text-green-800">
+                <strong>Reference:</strong> Chen & Hong (2008) - Monte Carlo simulation in financial engineering, 
+                Section 3: Path Generation.
+            </p>
         </div>
     </div>
 </div>
@@ -364,7 +441,7 @@ async function compareSchemes() {
             name: 'Euler Errors',
             marker: { 
                 color: '#ef4444', 
-                size: 4, 
+                size: 6, 
                 opacity: 0.6,
                 line: { width: 0 }
             }
@@ -378,33 +455,41 @@ async function compareSchemes() {
             name: 'Milstein Errors',
             marker: { 
                 color: '#10b981', 
-                size: 4, 
+                size: 6, 
                 opacity: 0.6,
                 line: { width: 0 }
             }
         };
         
         const layout = {
-            title: 'Error Distribution Comparison (First 100 Trials)',
+            title: {
+                text: 'Error Distribution Comparison (First 100 Trials)',
+                font: { size: 16, weight: 'bold' }
+            },
             xaxis: { 
                 title: 'Trial Number',
-                range: [0, 100]
+                range: [0, 100],
+                gridcolor: '#f3f4f6'
             },
             yaxis: { 
                 title: 'Absolute Error',
-                rangemode: 'tozero'
+                rangemode: 'tozero',
+                gridcolor: '#f3f4f6'
             },
             showlegend: true,
-            plot_bgcolor: '#f8fafc',
-            paper_bgcolor: '#f8fafc',
+            plot_bgcolor: '#fafafa',
+            paper_bgcolor: 'white',
             legend: {
-                x: 0,
-                y: 1,
-                bgcolor: 'rgba(255,255,255,0.8)'
-            }
+                x: 0.02,
+                y: 0.98,
+                bgcolor: 'rgba(255,255,255,0.9)',
+                bordercolor: '#e5e7eb',
+                borderwidth: 1
+            },
+            margin: { l: 60, r: 30, t: 60, b: 60 }
         };
         
-        Plotly.newPlot('errorPlot', [trace1, trace2], layout);
+        Plotly.newPlot('errorPlot', [trace1, trace2], layout, {responsive: true});
         
     } catch (error) {
         showError(error.message);
@@ -427,11 +512,20 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     const layout = {
-        title: 'Error Distribution Comparison',
-        xaxis: { title: 'Trial Number' },
-        yaxis: { title: 'Absolute Error' },
-        plot_bgcolor: '#f8fafc',
-        paper_bgcolor: '#f8fafc',
+        title: {
+            text: 'Error Distribution Comparison',
+            font: { size: 16 }
+        },
+        xaxis: { 
+            title: 'Trial Number',
+            gridcolor: '#f3f4f6'
+        },
+        yaxis: { 
+            title: 'Absolute Error',
+            gridcolor: '#f3f4f6'
+        },
+        plot_bgcolor: '#fafafa',
+        paper_bgcolor: 'white',
         annotations: [{
             text: 'Click "Compare Schemes" to see results',
             xref: 'paper',
@@ -443,7 +537,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }]
     };
     
-    Plotly.newPlot('errorPlot', [emptyTrace], layout);
+    Plotly.newPlot('errorPlot', [emptyTrace], layout, {responsive: true});
     
     // Auto-run after a short delay
     setTimeout(compareSchemes, 1000);

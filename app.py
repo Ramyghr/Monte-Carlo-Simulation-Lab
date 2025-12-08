@@ -4,6 +4,13 @@ from scipy.stats import norm
 from scipy.linalg import cholesky
 import json
 import uuid
+from utils.monte_carlo import (VarianceReduction, ConvergenceAnalyzer, 
+                               StochasticProcesses, PerformanceTracker,
+                               black_scholes_formula, generate_correlated_returns,
+                               estimate_var_cvar)
+from utils.financial_models import OptionPricer, GreeksEngine, RiskMetrics
+import time 
+
 app = Flask(__name__)
 
 # Utility functions for Monte Carlo simulations
@@ -25,6 +32,443 @@ def black_scholes_price(S0, K, T, r, sigma, option_type='call'):
         return K * np.exp(-r * T) * norm.cdf(-d2) - S0 * norm.cdf(-d1)
 
 # Routes
+@app.route('/api/enhanced-convergence', methods=['POST'])
+def enhanced_convergence():
+    """Enhanced convergence analysis with multiple metrics"""
+    try:
+        data = request.json
+        S0 = float(data['S0'])
+        K = float(data['K'])
+        T = float(data['T'])
+        r = float(data['r'])
+        sigma = float(data['sigma'])
+        max_sims = int(data.get('maxSimulations', 50000))
+        option_type = data.get('optionType', 'call')
+        
+        # Black-Scholes benchmark
+        bs_result = black_scholes_formula(S0, K, T, r, sigma, option_type)
+        true_price = bs_result['price']
+        
+        # Logarithmic sample sizes
+        sample_sizes = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000]
+        sample_sizes = [n for n in sample_sizes if n <= max_sims]
+        
+        results = []
+        tracker = PerformanceTracker()
+        
+        for n in sample_sizes:
+            trial_estimates = []
+            trial_times = []
+            n_trials = max(5, min(20, 10000 // n))
+            
+            for _ in range(n_trials):
+                start = time.time()
+                
+                result = OptionPricer.european_monte_carlo(
+                    S0, K, T, r, sigma, n, option_type
+                )
+                trial_estimates.append(result['price'])
+                trial_times.append(time.time() - start)
+            
+            estimates = np.array(trial_estimates)
+            mean_error = np.mean(np.abs(estimates - true_price))
+            rmse = np.sqrt(np.mean((estimates - true_price)**2))
+            
+            results.append({
+                'simulations': n,
+                'meanPrice': float(np.mean(estimates)),
+                'stdError': float(np.std(estimates)),
+                'meanAbsError': float(mean_error),
+                'rmse': float(rmse),
+                'bias': float(np.mean(estimates) - true_price),
+                'theoreticalStd': float(1.0 / np.sqrt(n)),
+                'meanTime': float(np.mean(trial_times)),
+                'efficiency': float(1.0 / (np.var(estimates) * np.mean(trial_times) + 1e-10)),
+                'trials': n_trials
+            })
+        
+        return jsonify({
+            'results': results,
+            'truePrice': true_price,
+            'blackScholesGreeks': bs_result,
+            'success': True
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e), 'success': False}), 400
+
+
+# ==================== VARIANCE REDUCTION COMPARISON ====================
+
+@app.route('/api/variance-reduction-detailed', methods=['POST'])
+def variance_reduction_detailed():
+    """Detailed variance reduction technique comparison"""
+    try:
+        data = request.json
+        S0 = float(data['S0'])
+        K = float(data['K'])
+        T = float(data['T'])
+        r = float(data['r'])
+        sigma = float(data['sigma'])
+        n_sims = int(data.get('simulations', 10000))
+        option_type = data.get('optionType', 'call')
+        
+        results = {}
+        tracker = PerformanceTracker()
+        
+        # Standard Monte Carlo
+        standard_result = tracker.track(
+            'standard_mc',
+            OptionPricer.european_monte_carlo,
+            S0, K, T, r, sigma, n_sims, option_type, use_antithetic=False
+        )
+        
+        # Antithetic Variates
+        antithetic_result = tracker.track(
+            'antithetic_mc',
+            OptionPricer.european_monte_carlo,
+            S0, K, T, r, sigma, n_sims, option_type, use_antithetic=True
+        )
+        
+        # Control Variates (using final stock price as control)
+        np.random.seed(42)  # For fair comparison
+        Z = np.random.randn(n_sims)
+        ST = S0 * np.exp((r - 0.5 * sigma**2) * T + sigma * np.sqrt(T) * Z)
+        
+        if option_type == 'call':
+            payoffs = np.maximum(ST - K, 0)
+        else:
+            payoffs = np.maximum(K - ST, 0)
+        
+        # Control variate: use ST with known mean
+        control_mean = S0 * np.exp(r * T)
+        cov_val = np.cov(payoffs, ST)[0, 1]
+        var_st = np.var(ST)
+        theta = cov_val / var_st if var_st > 0 else 0
+        
+        adjusted_payoffs = payoffs - theta * (ST - control_mean)
+        control_price = np.exp(-r * T) * np.mean(adjusted_payoffs)
+        control_variance = np.var(adjusted_payoffs)
+        
+        # Black-Scholes reference
+        bs_result = black_scholes_formula(S0, K, T, r, sigma, option_type)
+        
+        # Compile results
+        standard_var = np.var(standard_result['result']['payoffs'])
+        antithetic_var = np.var(antithetic_result['result']['payoffs'])
+        
+        return jsonify({
+            'standard': {
+                'price': standard_result['result']['price'],
+                'variance': float(standard_var),
+                'std_error': standard_result['result']['std_error'],
+                'time': standard_result['metrics']['time'],
+                'error_vs_bs': abs(standard_result['result']['price'] - bs_result['price'])
+            },
+            'antithetic': {
+                'price': antithetic_result['result']['price'],
+                'variance': float(antithetic_var),
+                'std_error': antithetic_result['result']['std_error'],
+                'time': antithetic_result['metrics']['time'],
+                'variance_reduction': float(1 - antithetic_var / standard_var) if standard_var > 0 else 0,
+                'error_vs_bs': abs(antithetic_result['result']['price'] - bs_result['price'])
+            },
+            'control_variate': {
+                'price': float(control_price),
+                'variance': float(control_variance),
+                'std_error': float(np.std(adjusted_payoffs) / np.sqrt(n_sims)),
+                'theta': float(theta),
+                'variance_reduction': float(1 - control_variance / standard_var) if standard_var > 0 else 0,
+                'error_vs_bs': abs(control_price - bs_result['price'])
+            },
+            'black_scholes': bs_result,
+            'summary': {
+                'best_method': 'antithetic' if antithetic_var < min(standard_var, control_variance) else 'control_variate' if control_variance < standard_var else 'standard',
+                'max_variance_reduction': float(max(1 - antithetic_var / standard_var, 1 - control_variance / standard_var, 0))
+            },
+            'success': True
+        })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc(), 'success': False}), 400
+
+
+# ==================== ENHANCED GREEKS WITH SURFACE ====================
+
+@app.route('/api/greeks-surface', methods=['POST'])
+def greeks_surface():
+    """Calculate Greek surface for 3D visualization"""
+    try:
+        data = request.json
+        K = float(data['K'])
+        T = float(data['T'])
+        r = float(data['r'])
+        
+        # Create ranges
+        S_min = K * 0.7
+        S_max = K * 1.3
+        sigma_min = 0.1
+        sigma_max = 0.5
+        
+        S_range = np.linspace(S_min, S_max, 20)
+        sigma_range = np.linspace(sigma_min, sigma_max, 20)
+        
+        # Calculate surfaces for different Greeks
+        surfaces = {}
+        for greek in ['delta', 'gamma', 'vega', 'theta']:
+            surface = np.zeros((len(S_range), len(sigma_range)))
+            
+            for i, S in enumerate(S_range):
+                for j, sigma in enumerate(sigma_range):
+                    bs_greeks = black_scholes_formula(S, K, T, r, sigma, 'call')
+                    surface[i, j] = bs_greeks[greek]
+            
+            surfaces[greek] = {
+                'z': surface.tolist(),
+                'x': S_range.tolist(),
+                'y': sigma_range.tolist()
+            }
+        
+        return jsonify({
+            'surfaces': surfaces,
+            'parameters': {
+                'K': K,
+                'T': T,
+                'r': r,
+                'S_range': [S_min, S_max],
+                'sigma_range': [sigma_min, sigma_max]
+            },
+            'success': True
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e), 'success': False}), 400
+
+
+# ==================== ENHANCED PATH GENERATION ====================
+
+@app.route('/api/generate-paths-advanced', methods=['POST'])
+def generate_paths_advanced():
+    """Generate paths with multiple processes and statistics"""
+    try:
+        data = request.json
+        S0 = float(data['S0'])
+        mu = float(data['mu'])
+        sigma = float(data['sigma'])
+        T = float(data['T'])
+        steps = int(data['steps'])
+        n_paths = int(data['paths'])
+        scheme = data.get('scheme', 'exact')
+        process_type = data.get('processType', 'gbm')
+        
+        if process_type == 'gbm':
+            t, paths = StochasticProcesses.gbm_paths(S0, mu, sigma, T, steps, n_paths, scheme)
+            
+        elif process_type == 'ou':
+            theta = float(data.get('theta', 1.0))
+            mean_level = float(data.get('meanLevel', S0))
+            t, paths = StochasticProcesses.ornstein_uhlenbeck(
+                S0, theta, mean_level, sigma, T, steps, n_paths
+            )
+        
+        # Calculate statistics
+        final_prices = paths[:, -1]
+        expected_final = S0 * np.exp(mu * T) if process_type == 'gbm' else data.get('meanLevel', S0)
+        
+        # Prepare data for plotting
+        plot_paths = []
+        for i in range(min(10, n_paths)):
+            path_data = [{'time': float(t[j]), 'price': float(paths[i, j]), 'path': i} 
+                        for j in range(len(t))]
+            plot_paths.append(path_data)
+        
+        return jsonify({
+            'paths': plot_paths,
+            'statistics': {
+                'mean_final': float(np.mean(final_prices)),
+                'std_final': float(np.std(final_prices)),
+                'min_final': float(np.min(final_prices)),
+                'max_final': float(np.max(final_prices)),
+                'expected_final': float(expected_final),
+                'mean_error': float(abs(np.mean(final_prices) - expected_final)),
+                'variance_final': float(np.var(final_prices))
+            },
+            'histogram': {
+                'values': final_prices.tolist(),
+                'bins': 30
+            },
+            'success': True
+        })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc(), 'success': False}), 400
+
+
+# ==================== ENHANCED AMERICAN OPTIONS ====================
+
+@app.route('/api/american-option-enhanced', methods=['POST'])
+def american_option_enhanced():
+    """Enhanced American option pricing with exercise boundary"""
+    try:
+        data = request.json
+        S0 = float(data['S0'])
+        K = float(data['K'])
+        T = float(data['T'])
+        r = float(data['r'])
+        sigma = float(data['sigma'])
+        steps = int(data.get('steps', 50))
+        n_paths = int(data.get('simulations', 5000))
+        option_type = data.get('optionType', 'put')
+        
+        # Price using Longstaff-Schwartz
+        result = OptionPricer.american_longstaff_schwartz(
+            S0, K, T, r, sigma, steps, n_paths, option_type
+        )
+        
+        return jsonify({
+            **result,
+            'success': True
+        })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc(), 'success': False}), 400
+
+
+# ==================== PORTFOLIO VAR ENHANCED ====================
+
+@app.route('/api/portfolio-var-enhanced', methods=['POST'])
+def portfolio_var_enhanced():
+    """Enhanced portfolio VaR with risk decomposition"""
+    try:
+        data = request.json
+        weights = np.array(data['weights'])
+        returns_params = data['returns']  # [[mu1, sigma1], [mu2, sigma2], ...]
+        correlations = np.array(data['correlations'])
+        portfolio_value = float(data['portfolioValue'])
+        confidence = float(data['confidence'])
+        n_sims = int(data.get('simulations', 10000))
+        time_horizon = int(data.get('days', 10))
+        
+        n_assets = len(weights)
+        
+        # Extract parameters
+        mu_annual = np.array([p[0] for p in returns_params])
+        sigma_annual = np.array([p[1] for p in returns_params])
+        
+        # Convert to time horizon
+        mu = mu_annual * time_horizon / 252
+        sigma = sigma_annual * np.sqrt(time_horizon / 252)
+        
+        # Build covariance matrix
+        cov_matrix = np.outer(sigma, sigma) * correlations
+        
+        # Generate correlated returns
+        returns = generate_correlated_returns(mu, cov_matrix, n_sims)
+        
+        # Calculate portfolio returns
+        portfolio_returns = returns @ weights
+        
+        # Calculate VaR and CVaR
+        var_cvar = estimate_var_cvar(-portfolio_returns, confidence)
+        var_value = var_cvar['var'] * portfolio_value
+        cvar_value = var_cvar['cvar'] * portfolio_value
+        
+        # Risk decomposition
+        risk_decomp = RiskMetrics.portfolio_risk_decomposition(
+            weights, returns, cov_matrix
+        )
+        
+        # Component VaR
+        marginal_var = []
+        for i in range(n_assets):
+            weight_shift = weights.copy()
+            weight_shift[i] += 0.01
+            weight_shift = weight_shift / np.sum(weight_shift)
+            
+            shifted_returns = returns @ weight_shift
+            shifted_var = estimate_var_cvar(-shifted_returns, confidence)['var'] * portfolio_value
+            
+            marginal_var.append({
+                'asset': i + 1,
+                'weight': float(weights[i]),
+                'marginal_var': float((shifted_var - var_value) / 0.01),
+                'component_var': float(weights[i] * (shifted_var - var_value) / 0.01)
+            })
+        
+        return jsonify({
+            'var': float(var_value),
+            'cvar': float(cvar_value),
+            'portfolio_returns': portfolio_returns[:1000].tolist(),
+            'risk_decomposition': risk_decomp,
+            'component_var': marginal_var,
+            'statistics': {
+                'mean_return': float(np.mean(portfolio_returns)),
+                'std_return': float(np.std(portfolio_returns)),
+                'sharpe_ratio': float(np.mean(portfolio_returns) / np.std(portfolio_returns)) if np.std(portfolio_returns) > 0 else 0,
+                'worst_return': float(np.min(portfolio_returns)),
+                'best_return': float(np.max(portfolio_returns))
+            },
+            'success': True
+        })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc(), 'success': False}), 400
+
+
+# ==================== PERFORMANCE BENCHMARKING ====================
+
+@app.route('/api/benchmark-methods', methods=['POST'])
+def benchmark_methods():
+    """Benchmark different MC methods and schemes"""
+    try:
+        data = request.json
+        S0 = float(data.get('S0', 100))
+        K = float(data.get('K', 100))
+        T = float(data.get('T', 1.0))
+        r = float(data.get('r', 0.05))
+        sigma = float(data.get('sigma', 0.2))
+        
+        benchmark_results = []
+        tracker = PerformanceTracker()
+        
+        # Test different sample sizes
+        for n in [1000, 5000, 10000, 50000]:
+            # Standard MC
+            std_result = tracker.track('standard', OptionPricer.european_monte_carlo,
+                                      S0, K, T, r, sigma, n, 'call', False)
+            
+            # Antithetic MC
+            anti_result = tracker.track('antithetic', OptionPricer.european_monte_carlo,
+                                       S0, K, T, r, sigma, n, 'call', True)
+            
+            benchmark_results.append({
+                'n_simulations': n,
+                'standard': {
+                    'price': std_result['result']['price'],
+                    'time': std_result['metrics']['time'],
+                    'std_error': std_result['result']['std_error']
+                },
+                'antithetic': {
+                    'price': anti_result['result']['price'],
+                    'time': anti_result['metrics']['time'],
+                    'std_error': anti_result['result']['std_error'],
+                    'speedup': std_result['metrics']['time'] / anti_result['metrics']['time']
+                }
+            })
+        
+        return jsonify({
+            'benchmarks': benchmark_results,
+            'summary': tracker.get_summary(),
+            'success': True
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e), 'success': False}), 400
+
 
 @app.route('/')
 def index():

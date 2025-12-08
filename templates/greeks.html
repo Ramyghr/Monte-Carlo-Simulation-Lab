@@ -3,272 +3,547 @@
 {% block title %}Option Greeks - Monte Carlo Lab{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2 class="text-2xl font-bold text-indigo-900 mb-4">Option Greeks Calculation</h2>
-    <p class="text-gray-700 mb-4">
-        Calculate option Greeks (Delta, Gamma, Vega, Theta, Rho) using Monte Carlo simulation with finite difference methods.
-        Greeks measure the sensitivity of option prices to changes in underlying parameters.
-    </p>
-
-    <div class="grid md:grid-cols-2 gap-6">
-        <div>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Initial Price (S₀)
-                    </label>
-                    <input type="number" id="S0" value="100" min="0.01" step="0.01" class="input-field" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Strike Price (K)
-                    </label>
-                    <input type="number" id="K" value="100" min="0.01" step="0.01" class="input-field" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Time to Maturity (T)
-                    </label>
-                    <input type="number" id="T" value="1" step="0.01" min="0.01" max="50" class="input-field" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Risk-free Rate (r)
-                    </label>
-                    <input type="number" id="r" value="0.05" step="0.001" min="0" max="1" class="input-field" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Volatility (σ)
-                    </label>
-                    <input type="number" id="sigma" value="0.2" step="0.01" min="0.01" max="5" class="input-field" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Simulations
-                    </label>
-                    <input type="number" id="simulations" value="10000" step="1000" min="1000" max="1000000" class="input-field" required>
-                </div>
-                <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Finite Difference Step (ε)
-                    </label>
-                    <input type="number" id="epsilon" value="0.05" step="0.001" min="0.001" max="0.1" class="input-field" required>
-                    <p class="text-xs text-gray-500 mt-1">Recommended: 0.01-0.05. Smaller values may cause numerical instability.</p>
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Option Type
-                </label>
-                <div class="flex gap-4">
-                    <label class="flex items-center">
-                        <input type="radio" name="optionType" value="call" checked class="mr-2">
-                        Call
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="optionType" value="put" class="mr-2">
-                        Put
-                    </label>
-                </div>
-            </div>
-
-            <button onclick="calculateGreeks()" class="btn-primary w-full mb-4" id="calculateBtn">
-                Calculate Greeks
-            </button>
-
-            <div class="loading hidden" id="loading">
-                <div class="spinner"></div>
-                <p class="mt-2 text-gray-600">Calculating... This may take a few seconds.</p>
-            </div>
-
-            <div id="errorAlert" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 hidden">
-                <div class="flex items-center">
-                    <div class="text-red-600">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800" id="errorMessage"></h3>
-                    </div>
-                </div>
-            </div>
-
-            <div id="results" class="bg-indigo-50 p-4 rounded-lg hidden">
-                <h3 class="font-bold text-lg mb-3 text-indigo-800">Results</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="text-sm">
-                        <strong>Option Price:</strong> $<span id="price"></span>
-                    </div>
-                    <div class="text-sm">
-                        <strong>Delta (Δ):</strong> <span id="delta"></span>
-                    </div>
-                    <div class="text-sm">
-                        <strong>Gamma (Γ):</strong> <span id="gamma"></span>
-                    </div>
-                    <div class="text-sm">
-                        <strong>Vega (ν):</strong> <span id="vega"></span>
-                    </div>
-                    <div class="text-sm">
-                        <strong>Theta (Θ):</strong> <span id="theta"></span>
-                    </div>
-                    <div class="text-sm">
-                        <strong>Rho (ρ):</strong> <span id="rho"></span>
-                    </div>
-                </div>
-            </div>
+<!-- Hero Card -->
+<div class="card border-l-4 border-indigo-500">
+    <div class="flex items-start gap-4">
+        <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
+            Δ
         </div>
-
-        <div>
-            <div id="greeksChart" style="width: 100%; height: 500px;"></div>
+        <div class="flex-1">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Option Greeks Calculation</h2>
+            <p class="text-gray-600 leading-relaxed">
+                Calculate option sensitivities (Greeks) using <strong>Monte Carlo simulation with finite difference methods</strong>. 
+                Greeks measure how option prices change with respect to market parameters: 
+                <strong>Delta (Δ)</strong> for price, <strong>Gamma (Γ)</strong> for convexity, 
+                <strong>Vega (ν)</strong> for volatility, <strong>Theta (Θ)</strong> for time decay, 
+                and <strong>Rho (ρ)</strong> for interest rates.
+            </p>
         </div>
     </div>
 </div>
 
-<!-- Rest of your content remains the same -->
-<div class="card bg-yellow-50">
-    <h3 class="text-xl font-bold text-yellow-900 mb-2">Greeks Definitions</h3>
-    <!-- ... keep existing content ... -->
+<div class="grid lg:grid-cols-2 gap-6">
+    <!-- Parameters Panel -->
+    <div class="space-y-6">
+        <!-- Market Parameters -->
+        <div class="card">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900">Market Parameters</h3>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Spot Price (S₀) <span class="text-gray-400 font-normal">$</span>
+                    </label>
+                    <input type="number" id="S0" value="100" step="0.01" min="0.01" 
+                           class="input-field" placeholder="100.00">
+                    <p class="text-xs text-gray-500 mt-1">Current stock price</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Strike Price (K) <span class="text-gray-400 font-normal">$</span>
+                    </label>
+                    <input type="number" id="K" value="100" step="0.01" min="0.01" 
+                           class="input-field" placeholder="100.00">
+                    <p class="text-xs text-gray-500 mt-1">Exercise price</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Time to Maturity (T) <span class="text-gray-400 font-normal">years</span>
+                    </label>
+                    <input type="number" id="T" value="1" step="0.01" min="0.01" max="50" 
+                           class="input-field" placeholder="1.0">
+                    <p class="text-xs text-gray-500 mt-1">Time until expiration</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Risk-free Rate (r) <span class="text-gray-400 font-normal">%</span>
+                    </label>
+                    <input type="number" id="r" value="5" step="0.1" min="0" max="100" 
+                           class="input-field" placeholder="5.0">
+                    <p class="text-xs text-gray-500 mt-1">Annual rate</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Volatility (σ) <span class="text-gray-400 font-normal">%</span>
+                    </label>
+                    <input type="number" id="sigma" value="20" step="0.1" min="0.1" max="500" 
+                           class="input-field" placeholder="20.0">
+                    <p class="text-xs text-gray-500 mt-1">Annual volatility</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Simulations <span class="text-gray-400 font-normal">#</span>
+                    </label>
+                    <input type="number" id="simulations" value="10000" step="1000" min="1000" max="1000000" 
+                           class="input-field" placeholder="10000">
+                    <p class="text-xs text-gray-500 mt-1">For each Greek calculation</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculation Settings -->
+        <div class="card">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Calculation Settings</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-3">Option Type</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-indigo-500 transition">
+                            <input type="radio" name="optionType" value="call" checked class="w-5 h-5 text-indigo-600">
+                            <div>
+                                <div class="font-semibold text-gray-900">Call Option</div>
+                                <div class="text-xs text-gray-500">Positive Delta</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-indigo-500 transition">
+                            <input type="radio" name="optionType" value="put" class="w-5 h-5 text-indigo-600">
+                            <div>
+                                <div class="font-semibold text-gray-900">Put Option</div>
+                                <div class="text-xs text-gray-500">Negative Delta</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Finite Difference Step (ε)
+                    </label>
+                    <input type="number" id="epsilon" value="0.01" step="0.001" min="0.001" max="0.1" 
+                           class="input-field" placeholder="0.01">
+                    <p class="text-xs text-gray-500 mt-1">
+                        Recommended: 0.01-0.05. Smaller values may cause numerical instability.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-3">
+            <button onclick="calculateGreeks()" id="calculateBtn" 
+                    class="btn-primary w-full text-lg py-4 flex items-center justify-center gap-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+                Calculate Greeks
+            </button>
+            
+            <button onclick="exportResults()" id="exportBtn" disabled
+                    class="btn-secondary w-full flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Export Greeks
+            </button>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p class="mt-4 text-gray-600 font-medium">Calculating sensitivities...</p>
+            <p class="text-sm text-gray-500 mt-2">Computing all Greeks with finite differences</p>
+        </div>
+    </div>
+
+    <!-- Results Panel -->
+    <div class="space-y-6">
+        <!-- Results Cards -->
+        <div id="results" class="space-y-4 hidden">
+            <div class="card bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">Greeks Summary</h3>
+                    <span class="info-badge success-badge">
+                        ✓ Calculated
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-blue-500">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="text-sm text-gray-600 font-medium">Option Price</div>
+                            <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">V</span>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-900" id="price">-</div>
+                        <div class="text-xs text-gray-500 mt-1">Monte Carlo estimate</div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-green-500">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="text-sm text-gray-600 font-medium">Delta (Δ)</div>
+                            <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">∂V/∂S</span>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-900" id="delta">-</div>
+                        <div class="text-xs text-gray-500 mt-1">Price sensitivity</div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-purple-500">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="text-sm text-gray-600 font-medium">Gamma (Γ)</div>
+                            <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">∂²V/∂S²</span>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-900" id="gamma">-</div>
+                        <div class="text-xs text-gray-500 mt-1">Delta sensitivity</div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-orange-500">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="text-sm text-gray-600 font-medium">Vega (ν)</div>
+                            <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">∂V/∂σ</span>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-900" id="vega">-</div>
+                        <div class="text-xs text-gray-500 mt-1">Volatility sensitivity</div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-red-500">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="text-sm text-gray-600 font-medium">Theta (Θ)</div>
+                            <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">∂V/∂t</span>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-900" id="theta">-</div>
+                        <div class="text-xs text-gray-500 mt-1">Time decay (daily)</div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-cyan-500">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="text-sm text-gray-600 font-medium">Rho (ρ)</div>
+                            <span class="text-xs bg-cyan-100 text-cyan-700 px-2 py-1 rounded">∂V/∂r</span>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-900" id="rho">-</div>
+                        <div class="text-xs text-gray-500 mt-1">Interest rate sensitivity</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison with Black-Scholes -->
+            <div class="card" id="comparisonCard">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">Black-Scholes Comparison</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="text-left p-2">Greek</th>
+                                <th class="text-right p-2">Monte Carlo</th>
+                                <th class="text-right p-2">Black-Scholes</th>
+                                <th class="text-right p-2">Difference</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonTable">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualization -->
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Greeks Visualization</h3>
+                <select id="greekSelector" class="input-field w-auto text-sm" onchange="updateVisualization()">
+                    <option value="all">All Greeks</option>
+                    <option value="delta">Delta</option>
+                    <option value="gamma">Gamma</option>
+                    <option value="vega">Vega</option>
+                    <option value="theta">Theta</option>
+                    <option value="rho">Rho</option>
+                </select>
+            </div>
+            <div id="plot" style="width: 100%; height: 450px;"></div>
+        </div>
+    </div>
 </div>
 
-<div class="card bg-blue-50">
-    <h3 class="text-xl font-bold text-blue-900 mb-2">Interpretation Guide</h3>
-    <!-- ... keep existing content ... -->
+<!-- Theory Section -->
+<div class="grid lg:grid-cols-2 gap-6 mt-6">
+    <div class="card bg-gradient-to-br from-yellow-50 to-orange-50">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center text-white font-bold">
+                📚
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">Greeks Definitions</h3>
+        </div>
+        
+        <div class="space-y-3">
+            <div class="bg-white rounded-lg p-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="font-bold text-green-600">Delta (Δ)</span>
+                    <code class="text-xs bg-gray-100 px-2 py-1 rounded">∂V/∂S</code>
+                </div>
+                <p class="text-sm text-gray-700">
+                    Change in option price for $1 change in underlying. Range: [0,1] for calls, [-1,0] for puts.
+                </p>
+            </div>
+            
+            <div class="bg-white rounded-lg p-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="font-bold text-purple-600">Gamma (Γ)</span>
+                    <code class="text-xs bg-gray-100 px-2 py-1 rounded">∂²V/∂S²</code>
+                </div>
+                <p class="text-sm text-gray-700">
+                    Rate of change of Delta. Highest for at-the-money options. Important for delta hedging.
+                </p>
+            </div>
+            
+            <div class="bg-white rounded-lg p-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="font-bold text-orange-600">Vega (ν)</span>
+                    <code class="text-xs bg-gray-100 px-2 py-1 rounded">∂V/∂σ</code>
+                </div>
+                <p class="text-sm text-gray-700">
+                    Change in option price for 1% change in volatility. Always positive for long options.
+                </p>
+            </div>
+            
+            <div class="bg-white rounded-lg p-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="font-bold text-red-600">Theta (Θ)</span>
+                    <code class="text-xs bg-gray-100 px-2 py-1 rounded">∂V/∂t</code>
+                </div>
+                <p class="text-sm text-gray-700">
+                    Time decay per day. Usually negative for long options (lose value with time).
+                </p>
+            </div>
+            
+            <div class="bg-white rounded-lg p-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="font-bold text-cyan-600">Rho (ρ)</span>
+                    <code class="text-xs bg-gray-100 px-2 py-1 rounded">∂V/∂r</code>
+                </div>
+                <p class="text-sm text-gray-700">
+                    Change in option price for 1% change in interest rates. Less significant for short-dated options.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-gradient-to-br from-blue-50 to-cyan-50">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white font-bold">
+                💡
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">Practical Applications</h3>
+        </div>
+        
+        <div class="space-y-3">
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Delta Hedging</p>
+                <p class="text-sm text-gray-700 mb-2">
+                    Maintain delta-neutral portfolio by holding -Δ shares of underlying per option contract.
+                </p>
+                <code class="text-xs bg-gray-100 px-2 py-1 rounded block">Hedge Ratio = -Delta × Contract Size</code>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Portfolio Risk Management</p>
+                <ul class="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                    <li><strong>Delta:</strong> Directional exposure</li>
+                    <li><strong>Gamma:</strong> Hedging costs and rebalancing frequency</li>
+                    <li><strong>Vega:</strong> Volatility risk exposure</li>
+                    <li><strong>Theta:</strong> Time decay P&L</li>
+                </ul>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Trading Strategies</p>
+                <div class="text-sm text-gray-700 space-y-2">
+                    <div class="flex justify-between">
+                        <span>Long Gamma:</span>
+                        <span class="font-mono text-xs">Straddles, Strangles</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Short Gamma:</span>
+                        <span class="font-mono text-xs">Iron Condors, Calendars</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Long Vega:</span>
+                        <span class="font-mono text-xs">Vol plays before events</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Finite Difference Method</p>
+                <p class="text-sm text-gray-700 mb-1">Central difference approximation:</p>
+                <code class="text-xs bg-gray-100 px-2 py-1 rounded block">
+                    Δ ≈ [V(S+ε) - V(S-ε)] / 2ε
+                </code>
+                <p class="text-xs text-gray-500 mt-2">
+                    ε = 1% of spot is typical. Too small → numerical errors. Too large → approximation errors.
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-function showError(message) {
-    const errorAlert = document.getElementById('errorAlert');
-    const errorMessage = document.getElementById('errorMessage');
-    errorMessage.textContent = message;
-    errorAlert.classList.remove('hidden');
-}
-
-function hideError() {
-    document.getElementById('errorAlert').classList.add('hidden');
-}
-
-function showLoading(id) {
-    document.getElementById(id).classList.remove('hidden');
-}
-
-function hideLoading(id) {
-    document.getElementById(id).classList.add('hidden');
-}
-
-function validateParams(params) {
-    if (params.S0 <= 0) throw new Error('Initial price must be positive');
-    if (params.K <= 0) throw new Error('Strike price must be positive');
-    if (params.T <= 0) throw new Error('Time to maturity must be positive');
-    if (params.r < 0) throw new Error('Risk-free rate cannot be negative');
-    if (params.sigma <= 0) throw new Error('Volatility must be positive');
-    if (params.simulations < 1000) throw new Error('Minimum 1000 simulations required');
-    if (params.epsilon <= 0 || params.epsilon > 0.1) throw new Error('Step size must be between 0.001 and 0.1');
-    return true;
-}
+let currentResults = null;
 
 async function calculateGreeks() {
     const params = {
         S0: parseFloat(document.getElementById('S0').value),
         K: parseFloat(document.getElementById('K').value),
         T: parseFloat(document.getElementById('T').value),
-        r: parseFloat(document.getElementById('r').value),
-        sigma: parseFloat(document.getElementById('sigma').value),
+        r: parseFloat(document.getElementById('r').value) / 100,
+        sigma: parseFloat(document.getElementById('sigma').value) / 100,
         simulations: parseInt(document.getElementById('simulations').value),
         optionType: document.querySelector('input[name="optionType"]:checked').value,
         epsilon: parseFloat(document.getElementById('epsilon').value)
     };
     
-    try {
-        validateParams(params);
-    } catch (error) {
-        showError(error.message);
+    // Validation
+    if (params.S0 <= 0 || params.K <= 0 || params.T <= 0 || params.sigma <= 0) {
+        showToast('All parameters must be positive', 'error');
+        return;
+    }
+    
+    if (params.simulations < 1000) {
+        showToast('Minimum 1000 simulations required', 'error');
         return;
     }
     
     const calculateBtn = document.getElementById('calculateBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    
     calculateBtn.disabled = true;
+    exportBtn.disabled = true;
     showLoading('loading');
-    hideError();
     document.getElementById('results').classList.add('hidden');
     
     try {
         const response = await fetch('/api/calculate-greeks', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(params)
         });
         
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Server error');
+            throw new Error(errorData.error || 'Calculation failed');
         }
         
         const data = await response.json();
-        
-        // Validate results make sense
-        if (data.theta > 0) {
-            console.warn('Theta is positive - this may indicate calculation issues');
-        }
-        if (Math.abs(data.gamma) > 10) {
-            console.warn('Gamma seems unusually high');
-        }
+        currentResults = data;
         
         // Update results
-        document.getElementById('price').textContent = data.price.toFixed(4);
+        document.getElementById('price').textContent = '$' + data.price.toFixed(4);
         document.getElementById('delta').textContent = data.delta.toFixed(4);
-        document.getElementById('gamma').textContent = data.gamma.toFixed(6); // More precision for gamma
+        document.getElementById('gamma').textContent = data.gamma.toFixed(6);
         document.getElementById('vega').textContent = data.vega.toFixed(4);
         document.getElementById('theta').textContent = data.theta.toFixed(4);
         document.getElementById('rho').textContent = data.rho.toFixed(4);
+        
+        // Show results
         document.getElementById('results').classList.remove('hidden');
+        exportBtn.disabled = false;
         
-        // Create greeks visualization
-        const greeksData = [
-            {
-                x: ['Delta', 'Gamma', 'Vega', 'Theta', 'Rho'],
-                y: [data.delta, data.gamma * 100, data.vega, data.theta, data.rho], // Scale gamma for better visualization
-                type: 'bar',
-                marker: {
-                    color: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
-                }
-            }
-        ];
+        // Plot Greeks
+        plotGreeks(data);
         
-        const layout = {
-            title: 'Option Greeks Visualization',
-            xaxis: { title: 'Greek' },
-            yaxis: { title: 'Value' },
-            showlegend: false
-        };
-        
-        Plotly.newPlot('greeksChart', greeksData, layout);
+        showToast('Greeks calculated successfully!', 'success');
         
     } catch (error) {
-        showError(error.message);
-        console.error('Calculation error:', error);
+        showToast('Calculation failed: ' + error.message, 'error');
+        console.error(error);
     } finally {
         hideLoading('loading');
         calculateBtn.disabled = false;
     }
 }
 
-// Initialize chart with empty data
-Plotly.newPlot('greeksChart', [{
-    x: ['Delta', 'Gamma', 'Vega', 'Theta', 'Rho'],
-    y: [0, 0, 0, 0, 0],
-    type: 'bar',
-    marker: {color: '#e5e7eb'}
-}], {
-    title: 'Option Greeks Visualization',
-    xaxis: { title: 'Greek' },
-    yaxis: { title: 'Value' }
-});
+function plotGreeks(data) {
+    const greeks = ['Delta', 'Gamma', 'Vega', 'Theta', 'Rho'];
+    const values = [
+        data.delta,
+        data.gamma * 100, // Scale gamma for visibility
+        data.vega,
+        data.theta,
+        data.rho
+    ];
+    const colors = ['#10b981', '#8b5cf6', '#f97316', '#ef4444', '#06b6d4'];
+    
+    const trace = {
+        x: greeks,
+        y: values,
+        type: 'bar',
+        marker: {
+            color: colors,
+            line: { color: '#1f2937', width: 1 }
+        },
+        text: values.map(v => v.toFixed(4)),
+        textposition: 'outside',
+        hovertemplate: '<b>%{x}</b><br>Value: %{y:.4f}<extra></extra>'
+    };
+    
+    const layout = {
+        title: {
+            text: 'Option Greeks Summary',
+            font: { size: 18, weight: 'bold' }
+        },
+        xaxis: { 
+            title: 'Greek',
+            gridcolor: '#f3f4f6'
+        },
+        yaxis: { 
+            title: 'Value',
+            gridcolor: '#f3f4f6'
+        },
+        plot_bgcolor: '#fafafa',
+        paper_bgcolor: 'white',
+        showlegend: false,
+        margin: { l: 60, r: 30, t: 60, b: 60 }
+    };
+    
+    Plotly.newPlot('plot', [trace], layout, {responsive: true});
+}
+
+function updateVisualization() {
+    if (!currentResults) return;
+    
+    const selected = document.getElementById('greekSelector').value;
+    
+    if (selected === 'all') {
+        plotGreeks(currentResults);
+    } else {
+        showToast('Single Greek visualization coming soon!', 'info');
+    }
+}
+
+function exportResults() {
+    if (!currentResults) return;
+    
+    const csv = [
+        'Greek,Value',
+        `Price,${currentResults.price}`,
+        `Delta,${currentResults.delta}`,
+        `Gamma,${currentResults.gamma}`,
+        `Vega,${currentResults.vega}`,
+        `Theta,${currentResults.theta}`,
+        `Rho,${currentResults.rho}`
+    ];
+    
+    const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'greeks_results.csv';
+    a.click();
+    
+    showToast('Greeks exported successfully!', 'success');
+}
 </script>
 {% endblock %}

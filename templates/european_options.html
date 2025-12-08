@@ -1,183 +1,471 @@
 {% extends "base.html" %}
 
-{% block title %}European Options - Monte Carlo Lab{% endblock %}
+{% block title %}European Options Pricing - Monte Carlo Lab{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2 class="text-2xl font-bold text-indigo-900 mb-4">European Option Pricing</h2>
-    <p class="text-gray-700 mb-4">
-        Price European options using Monte Carlo simulation and compare with Black-Scholes analytical solution.
-        The risk-neutral pricing formula: V(t,s) = Ẽ[e^(-∫r ds) Φ(S_T) | S_t = s]
-    </p>
-
-    <div class="grid md:grid-cols-2 gap-6">
-        <div>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Initial Price (S₀)
-                    </label>
-                    <input type="number" id="S0" value="100" class="input-field">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Strike Price (K)
-                    </label>
-                    <input type="number" id="K" value="100" class="input-field">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Time to Maturity (T)
-                    </label>
-                    <input type="number" id="T" value="1" step="0.1" class="input-field">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Risk-free Rate (r)
-                    </label>
-                    <input type="number" id="r" value="0.05" step="0.01" class="input-field">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Volatility (σ)
-                    </label>
-                    <input type="number" id="sigma" value="0.2" step="0.01" class="input-field">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Simulations
-                    </label>
-                    <input type="number" id="simulations" value="10000" step="1000" class="input-field">
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Option Type
-                </label>
-                <div class="flex gap-4">
-                    <label class="flex items-center">
-                        <input type="radio" name="optionType" value="call" checked class="mr-2">
-                        Call
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="optionType" value="put" class="mr-2">
-                        Put
-                    </label>
-                </div>
-            </div>
-
-            <button onclick="priceOption()" class="btn-primary w-full mb-4" id="priceBtn">
-                Price Option
-            </button>
-
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p class="mt-2 text-gray-600">Calculating...</p>
-            </div>
-
-            <div id="results" class="bg-indigo-50 p-4 rounded-lg space-y-2" style="display: none;">
-                <div class="text-sm text-gray-600">
-                    <strong>Monte Carlo Price:</strong> $<span id="mcPrice"></span>
-                </div>
-                <div class="text-sm text-gray-600">
-                    <strong>Black-Scholes Price:</strong> $<span id="bsPrice"></span>
-                </div>
-                <div class="text-sm text-gray-600">
-                    <strong>Difference:</strong> $<span id="difference"></span>
-                </div>
-                <div class="text-sm text-gray-600">
-                    <strong>Standard Error:</strong> $<span id="stdError"></span>
-                </div>
-            </div>
+<!-- Hero Card -->
+<div class="card border-l-4 border-blue-500">
+    <div class="flex items-start gap-4">
+        <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
+            €
         </div>
-
-        <div>
-            <div id="plot" style="width: 100%; height: 500px;"></div>
+        <div class="flex-1">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">European Option Pricing</h2>
+            <p class="text-gray-600 leading-relaxed">
+                Price European call and put options using Monte Carlo simulation and compare with the 
+                Black-Scholes analytical solution. This demonstrates risk-neutral pricing with 
+                <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">V(t,s) = Ẽ[e^(-∫r ds) Φ(S_T) | S_t = s]</span>
+            </p>
         </div>
     </div>
 </div>
 
-<div class="card bg-yellow-50">
-    <h3 class="text-xl font-bold text-yellow-900 mb-2">Theory</h3>
-    <p class="text-gray-700 mb-3">
-        <strong>Geometric Brownian Motion:</strong>
-    </p>
-    <p class="font-mono text-sm mb-3">
-        dS_t = μS_t dt + σS_t dW_t
-    </p>
-    <p class="text-gray-700 mb-3">
-        <strong>Risk-Neutral Simulation:</strong>
-    </p>
-    <p class="font-mono text-sm mb-3">
-        S_T = S_0 exp((r - σ²/2)T + σ√T·Z)
-    </p>
-    <p class="text-gray-700">
-        where Z ~ N(0,1) is a standard normal random variable.
-    </p>
+<div class="grid lg:grid-cols-2 gap-6">
+    <!-- Parameters Panel -->
+    <div class="space-y-6">
+        <!-- Market Parameters -->
+        <div class="card">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900">Market Parameters</h3>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Initial Price (S₀)
+                        <span class="text-gray-400 font-normal ml-1">$</span>
+                    </label>
+                    <input type="number" id="S0" value="100" step="0.01" min="0.01" 
+                           class="input-field" placeholder="100.00">
+                    <p class="text-xs text-gray-500 mt-1">Current stock/asset price</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Strike Price (K)
+                        <span class="text-gray-400 font-normal ml-1">$</span>
+                    </label>
+                    <input type="number" id="K" value="100" step="0.01" min="0.01" 
+                           class="input-field" placeholder="100.00">
+                    <p class="text-xs text-gray-500 mt-1">Exercise price of option</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Time to Maturity (T)
+                        <span class="text-gray-400 font-normal ml-1">years</span>
+                    </label>
+                    <input type="number" id="T" value="1" step="0.1" min="0.01" max="10" 
+                           class="input-field" placeholder="1.0">
+                    <p class="text-xs text-gray-500 mt-1">Time until expiration</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Risk-free Rate (r)
+                        <span class="text-gray-400 font-normal ml-1">%</span>
+                    </label>
+                    <input type="number" id="r" value="5" step="0.1" min="0" max="100" 
+                           class="input-field" placeholder="5.0">
+                    <p class="text-xs text-gray-500 mt-1">Annual risk-free rate</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Volatility (σ)
+                        <span class="text-gray-400 font-normal ml-1">%</span>
+                    </label>
+                    <input type="number" id="sigma" value="20" step="0.1" min="0.1" max="200" 
+                           class="input-field" placeholder="20.0">
+                    <p class="text-xs text-gray-500 mt-1">Annual volatility</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Simulations
+                        <span class="text-gray-400 font-normal ml-1">#</span>
+                    </label>
+                    <input type="number" id="simulations" value="10000" step="1000" min="1000" max="1000000" 
+                           class="input-field" placeholder="10000">
+                    <p class="text-xs text-gray-500 mt-1">Number of Monte Carlo paths</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Option Configuration -->
+        <div class="card">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Option Configuration</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-3">Option Type</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-500 transition">
+                            <input type="radio" name="optionType" value="call" checked class="w-5 h-5 text-blue-600">
+                            <div>
+                                <div class="font-semibold text-gray-900">Call Option</div>
+                                <div class="text-xs text-gray-500">Right to buy</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-500 transition">
+                            <input type="radio" name="optionType" value="put" class="w-5 h-5 text-blue-600">
+                            <div>
+                                <div class="font-semibold text-gray-900">Put Option</div>
+                                <div class="text-xs text-gray-500">Right to sell</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                        <input type="checkbox" id="useAntithetic" class="w-4 h-4 text-blue-600 rounded">
+                        Use Antithetic Variates
+                    </label>
+                    <p class="text-xs text-gray-500 ml-6">Variance reduction technique for better accuracy</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-3">
+            <button onclick="priceOption()" id="priceBtn" 
+                    class="btn-primary w-full text-lg py-4 flex items-center justify-center gap-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Price Option
+            </button>
+            
+            <button onclick="exportResults()" id="exportBtn" disabled
+                    class="btn-secondary w-full flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Export Results (CSV)
+            </button>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p class="mt-4 text-gray-600 font-medium">Running Monte Carlo simulation...</p>
+            <p class="text-sm text-gray-500 mt-2">This may take a few seconds</p>
+        </div>
+    </div>
+
+    <!-- Results Panel -->
+    <div class="space-y-6">
+        <!-- Results Cards -->
+        <div id="results" class="space-y-4 hidden">
+            <div class="card bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">Pricing Results</h3>
+                    <span class="info-badge success-badge" id="convergenceIndicator">
+                        ✓ Converged
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <div class="text-sm text-gray-600 font-medium mb-1">Monte Carlo Price</div>
+                        <div class="text-3xl font-bold text-blue-600" id="mcPrice">-</div>
+                        <div class="text-xs text-gray-500 mt-1">±<span id="mcError">-</span> std error</div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <div class="text-sm text-gray-600 font-medium mb-1">Black-Scholes Price</div>
+                        <div class="text-3xl font-bold text-purple-600" id="bsPrice">-</div>
+                        <div class="text-xs text-gray-500 mt-1">Analytical solution</div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <div class="text-sm text-gray-600 font-medium mb-1">Absolute Difference</div>
+                        <div class="text-2xl font-bold text-gray-900" id="difference">-</div>
+                        <div class="text-xs text-gray-500 mt-1" id="differencePercent">-</div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <div class="text-sm text-gray-600 font-medium mb-1">Confidence Interval</div>
+                        <div class="text-sm font-mono text-gray-900" id="confidenceInterval">-</div>
+                        <div class="text-xs text-gray-500 mt-1">95% CI</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Statistics -->
+            <div class="card">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Simulation Statistics</h3>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-600">Min Payoff</div>
+                        <div class="text-xl font-bold text-gray-900" id="minPayoff">-</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-600">Mean Payoff</div>
+                        <div class="text-xl font-bold text-gray-900" id="meanPayoff">-</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-600">Max Payoff</div>
+                        <div class="text-xl font-bold text-gray-900" id="maxPayoff">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualization -->
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Payoff Distribution</h3>
+                <div class="flex gap-2">
+                    <button onclick="changeView('histogram')" class="btn-secondary text-sm py-2 px-4">
+                        Histogram
+                    </button>
+                    <button onclick="changeView('paths')" class="btn-secondary text-sm py-2 px-4">
+                        Sample Paths
+                    </button>
+                </div>
+            </div>
+            <div id="plot" style="width: 100%; height: 450px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Theory Section -->
+<div class="grid lg:grid-cols-2 gap-6 mt-6">
+    <div class="card bg-gradient-to-br from-yellow-50 to-orange-50">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center text-white font-bold">
+                📚
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">Theoretical Foundation</h3>
+        </div>
+        
+        <div class="space-y-4">
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Geometric Brownian Motion</p>
+                <div class="font-mono text-sm bg-gray-50 p-3 rounded border">
+                    dS<sub>t</sub> = μS<sub>t</sub>dt + σS<sub>t</sub>dW<sub>t</sub>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">
+                    Models stock price dynamics with drift μ and volatility σ
+                </p>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Risk-Neutral Pricing</p>
+                <div class="font-mono text-sm bg-gray-50 p-3 rounded border">
+                    S<sub>T</sub> = S<sub>0</sub> exp((r - σ²/2)T + σ√T·Z)
+                </div>
+                <p class="text-sm text-gray-600 mt-2">
+                    Under Q-measure, expected return equals risk-free rate
+                </p>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Option Payoff</p>
+                <div class="font-mono text-sm bg-gray-50 p-3 rounded border">
+                    Call: max(S<sub>T</sub> - K, 0)<br>
+                    Put: max(K - S<sub>T</sub>, 0)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-gradient-to-br from-blue-50 to-cyan-50">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white font-bold">
+                💡
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">Implementation Details</h3>
+        </div>
+        
+        <div class="space-y-3">
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Monte Carlo Algorithm</p>
+                <ol class="text-sm text-gray-700 space-y-2 list-decimal list-inside">
+                    <li>Generate N random standard normals Z ~ N(0,1)</li>
+                    <li>Simulate terminal prices: S<sub>T</sub> = S<sub>0</sub>exp((r-σ²/2)T + σ√T·Z)</li>
+                    <li>Calculate payoffs based on option type</li>
+                    <li>Discount average payoff: V = e<sup>-rT</sup>·E[Payoff]</li>
+                    <li>Estimate standard error for confidence intervals</li>
+                </ol>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Convergence Rate</p>
+                <p class="text-sm text-gray-700">
+                    Monte Carlo error decreases as <span class="font-mono">O(1/√N)</span>. 
+                    To halve error, need 4× more simulations. Antithetic variates can 
+                    reduce variance by 30-50%.
+                </p>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Advantages</p>
+                <ul class="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                    <li>Works for path-dependent options</li>
+                    <li>Easily extends to exotic derivatives</li>
+                    <li>Natural for multi-asset portfolios</li>
+                    <li>Parallelizable for performance</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+let currentResults = null;
+
 async function priceOption() {
     const params = {
         S0: parseFloat(document.getElementById('S0').value),
         K: parseFloat(document.getElementById('K').value),
         T: parseFloat(document.getElementById('T').value),
-        r: parseFloat(document.getElementById('r').value),
-        sigma: parseFloat(document.getElementById('sigma').value),
+        r: parseFloat(document.getElementById('r').value) / 100,
+        sigma: parseFloat(document.getElementById('sigma').value) / 100,
         simulations: parseInt(document.getElementById('simulations').value),
-        optionType: document.querySelector('input[name="optionType"]:checked').value
+        optionType: document.querySelector('input[name="optionType"]:checked').value,
+        useAntithetic: document.getElementById('useAntithetic').checked
     };
     
+    // Validation
+    if (params.S0 <= 0 || params.K <= 0 || params.T <= 0 || params.sigma <= 0) {
+        showToast('All parameters must be positive', 'error');
+        return;
+    }
+    
     const priceBtn = document.getElementById('priceBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    
     priceBtn.disabled = true;
+    exportBtn.disabled = true;
     showLoading('loading');
-    document.getElementById('results').style.display = 'none';
+    document.getElementById('results').classList.add('hidden');
     
     try {
         const response = await fetch('/api/price-european-option', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(params)
         });
         
+        if (!response.ok) throw new Error('Server error');
+        
         const data = await response.json();
+        currentResults = data;
         
         // Update results
-        document.getElementById('mcPrice').textContent = data.mcPrice.toFixed(4);
-        document.getElementById('bsPrice').textContent = data.bsPrice.toFixed(4);
-        document.getElementById('difference').textContent = data.difference.toFixed(4);
-        document.getElementById('stdError').textContent = data.stdError.toFixed(4);
-        document.getElementById('results').style.display = 'block';
+        document.getElementById('mcPrice').textContent = '$' + data.mcPrice.toFixed(4);
+        document.getElementById('bsPrice').textContent = '$' + data.bsPrice.toFixed(4);
+        document.getElementById('mcError').textContent = data.stdError.toFixed(4);
         
-        // Plot payoff distribution
-        const trace = {
-            x: data.payoffs.map((p, i) => i),
-            y: data.payoffs,
-            type: 'bar',
-            name: 'Payoff',
-            marker: { color: '#4f46e5' }
-        };
+        const diff = Math.abs(data.mcPrice - data.bsPrice);
+        const diffPercent = (diff / data.bsPrice * 100).toFixed(2);
+        document.getElementById('difference').textContent = '$' + diff.toFixed(4);
+        document.getElementById('differencePercent').textContent = diffPercent + '% error';
         
-        const layout = {
-            title: 'Payoff Distribution (First 100 Simulations)',
-            xaxis: { title: 'Simulation' },
-            yaxis: { title: 'Payoff' },
-            showlegend: true
-        };
+        // Confidence interval
+        const ciLower = data.mcPrice - 1.96 * data.stdError;
+        const ciUpper = data.mcPrice + 1.96 * data.stdError;
+        document.getElementById('confidenceInterval').textContent = 
+            `[$${ciLower.toFixed(4)}, $${ciUpper.toFixed(4)}]`;
         
-        Plotly.newPlot('plot', [trace], layout);
+        // Statistics
+        document.getElementById('minPayoff').textContent = '$' + Math.min(...data.payoffs).toFixed(2);
+        document.getElementById('meanPayoff').textContent = '$' + (data.payoffs.reduce((a,b) => a+b) / data.payoffs.length).toFixed(2);
+        document.getElementById('maxPayoff').textContent = '$' + Math.max(...data.payoffs).toFixed(2);
+        
+        // Show results
+        document.getElementById('results').classList.remove('hidden');
+        exportBtn.disabled = false;
+        
+        // Plot histogram
+        plotHistogram(data.payoffs, data.finalPrices, params.K);
+        
+        showToast('Pricing completed successfully!', 'success');
         
     } catch (error) {
-        showError(error.message);
+        showToast('Calculation failed: ' + error.message, 'error');
+        console.error(error);
     } finally {
         hideLoading('loading');
         priceBtn.disabled = false;
     }
+}
+
+function plotHistogram(payoffs, finalPrices, strike) {
+    const trace1 = {
+        x: payoffs,
+        type: 'histogram',
+        name: 'Payoff Distribution',
+        marker: { 
+            color: '#4f46e5',
+            line: { color: '#3730a3', width: 1 }
+        },
+        opacity: 0.8,
+        nbinsx: 50
+    };
+    
+    const layout = {
+        title: {
+            text: 'Option Payoff Distribution',
+            font: { size: 18, weight: 'bold' }
+        },
+        xaxis: { 
+            title: 'Payoff ($)',
+            gridcolor: '#f3f4f6'
+        },
+        yaxis: { 
+            title: 'Frequency',
+            gridcolor: '#f3f4f6'
+        },
+        plot_bgcolor: '#fafafa',
+        paper_bgcolor: 'white',
+        showlegend: false,
+        margin: { l: 60, r: 30, t: 60, b: 60 }
+    };
+    
+    Plotly.newPlot('plot', [trace1], layout, {responsive: true});
+}
+
+function changeView(viewType) {
+    if (!currentResults) return;
+    
+    if (viewType === 'histogram') {
+        const params = {
+            K: parseFloat(document.getElementById('K').value)
+        };
+        plotHistogram(currentResults.payoffs, currentResults.finalPrices, params.K);
+    } else {
+        // Plot sample paths (simplified)
+        showToast('Path visualization coming soon!', 'info');
+    }
+}
+
+function exportResults() {
+    if (!currentResults) return;
+    
+    const csv = ['Payoff,FinalPrice'];
+    currentResults.payoffs.forEach((payoff, i) => {
+        csv.push(`${payoff},${currentResults.finalPrices[i]}`);
+    });
+    
+    const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'european_option_results.csv';
+    a.click();
+    
+    showToast('Results exported successfully!', 'success');
 }
 </script>
 {% endblock %}

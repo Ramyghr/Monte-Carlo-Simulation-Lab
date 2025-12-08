@@ -1,179 +1,357 @@
 {% extends "base.html" %}
 
-{% block title %}Asian Options - Monte Carlo Lab{% endblock %}
+{% block title %}Asian Options Pricing - Monte Carlo Lab{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2 class="text-2xl font-bold text-indigo-900 mb-4">Asian Option Pricing</h2>
-    <p class="text-gray-700 mb-4">
-        Price Asian options where the payoff depends on the average price of the underlying asset over a period.
-        Asian options have lower volatility and are cheaper than standard options.
-    </p>
+<!-- Hero Card -->
+<div class="card border-l-4 border-orange-500">
+    <div class="flex items-start gap-4">
+        <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
+            🌏
+        </div>
+        <div class="flex-1">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Asian Option Pricing</h2>
+            <p class="text-gray-600 leading-relaxed">
+                Price Asian options where the payoff depends on the <strong>average price</strong> of the underlying 
+                asset over a period. Asian options have lower volatility and are cheaper than standard options due 
+                to the averaging effect, making them popular for hedging and reducing manipulation risk in commodity 
+                and foreign exchange markets.
+            </p>
+        </div>
+    </div>
+</div>
 
-    <div class="grid md:grid-cols-2 gap-6">
-        <div>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Initial Price (S₀)
-                    </label>
-                    <input type="number" id="S0" value="100" class="input-field">
+<div class="grid lg:grid-cols-2 gap-6">
+    <!-- Parameters Panel -->
+    <div class="space-y-6">
+        <!-- Market Parameters -->
+        <div class="card">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
                 </div>
+                <h3 class="text-xl font-bold text-gray-900">Market Parameters</h3>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Strike Price (K)
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Initial Price (S₀) <span class="text-gray-400 font-normal">$</span>
                     </label>
-                    <input type="number" id="K" value="100" class="input-field">
+                    <input type="number" id="S0" value="100" step="0.01" min="0.01" 
+                           class="input-field" placeholder="100.00">
+                    <p class="text-xs text-gray-500 mt-1">Starting asset price</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Time to Maturity (T)
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Strike Price (K) <span class="text-gray-400 font-normal">$</span>
                     </label>
-                    <input type="number" id="T" value="1" step="0.1" class="input-field">
+                    <input type="number" id="K" value="100" step="0.01" min="0.01" 
+                           class="input-field" placeholder="100.00">
+                    <p class="text-xs text-gray-500 mt-1">Exercise price</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Risk-free Rate (r)
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Time to Maturity (T) <span class="text-gray-400 font-normal">years</span>
                     </label>
-                    <input type="number" id="r" value="0.05" step="0.01" class="input-field">
+                    <input type="number" id="T" value="1" step="0.1" min="0.01" max="10" 
+                           class="input-field" placeholder="1.0">
+                    <p class="text-xs text-gray-500 mt-1">Averaging period</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Volatility (σ)
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Risk-free Rate (r) <span class="text-gray-400 font-normal">%</span>
                     </label>
-                    <input type="number" id="sigma" value="0.2" step="0.01" class="input-field">
+                    <input type="number" id="r" value="5" step="0.1" min="0" max="100" 
+                           class="input-field" placeholder="5.0">
+                    <p class="text-xs text-gray-500 mt-1">Annual rate</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Simulations
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Volatility (σ) <span class="text-gray-400 font-normal">%</span>
                     </label>
-                    <input type="number" id="simulations" value="10000" step="1000" class="input-field">
+                    <input type="number" id="sigma" value="20" step="0.1" min="0.1" max="200" 
+                           class="input-field" placeholder="20.0">
+                    <p class="text-xs text-gray-500 mt-1">Annual volatility</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Simulations <span class="text-gray-400 font-normal">#</span>
+                    </label>
+                    <input type="number" id="simulations" value="10000" step="1000" min="1000" max="100000" 
+                           class="input-field" placeholder="10000">
+                    <p class="text-xs text-gray-500 mt-1">Monte Carlo paths</p>
                 </div>
             </div>
+        </div>
 
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Option Type
-                </label>
-                <div class="flex gap-4">
-                    <label class="flex items-center">
-                        <input type="radio" name="optionType" value="call" checked class="mr-2">
-                        Call
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="optionType" value="put" class="mr-2">
-                        Put
-                    </label>
+        <!-- Option Configuration -->
+        <div class="card">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Option Configuration</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-3">Option Type</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-orange-500 transition">
+                            <input type="radio" name="optionType" value="call" checked class="w-5 h-5 text-orange-600">
+                            <div>
+                                <div class="font-semibold text-gray-900">Call Option</div>
+                                <div class="text-xs text-gray-500">Profit from avg > K</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-orange-500 transition">
+                            <input type="radio" name="optionType" value="put" class="w-5 h-5 text-orange-600">
+                            <div>
+                                <div class="font-semibold text-gray-900">Put Option</div>
+                                <div class="text-xs text-gray-500">Profit from avg < K</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-3">Average Type</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-orange-500 transition">
+                            <input type="radio" name="avgType" value="arithmetic" checked class="w-5 h-5 text-orange-600">
+                            <div>
+                                <div class="font-semibold text-gray-900">Arithmetic</div>
+                                <div class="text-xs text-gray-500 font-mono">Σ S<sub>i</sub> / n</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-orange-500 transition">
+                            <input type="radio" name="avgType" value="geometric" class="w-5 h-5 text-orange-600">
+                            <div>
+                                <div class="font-semibold text-gray-900">Geometric</div>
+                                <div class="text-xs text-gray-500 font-mono">(∏ S<sub>i</sub>)<sup>1/n</sup></div>
+                            </div>
+                        </label>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Average Type
-                </label>
-                <div class="flex gap-4">
-                    <label class="flex items-center">
-                        <input type="radio" name="avgType" value="arithmetic" checked class="mr-2">
-                        Arithmetic Average
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="avgType" value="geometric" class="mr-2">
-                        Geometric Average
-                    </label>
-                </div>
-            </div>
-
-            <button onclick="priceAsianOption()" class="btn-primary w-full mb-4" id="priceBtn">
+        <!-- Action Buttons -->
+        <div class="space-y-3">
+            <button onclick="priceAsianOption()" id="priceBtn" 
+                    class="btn-primary w-full text-lg py-4 flex items-center justify-center gap-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
                 Price Asian Option
             </button>
+            
+            <button onclick="exportResults()" id="exportBtn" disabled
+                    class="btn-secondary w-full flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Export Results
+            </button>
+        </div>
 
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p class="mt-2 text-gray-600">Calculating...</p>
+        <!-- Loading Indicator -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p class="mt-4 text-gray-600 font-medium">Computing path averages...</p>
+            <p class="text-sm text-gray-500 mt-2">Simulating price paths</p>
+        </div>
+    </div>
+
+    <!-- Results Panel -->
+    <div class="space-y-6">
+        <!-- Results Cards -->
+        <div id="results" class="space-y-4 hidden">
+            <div class="card bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">Pricing Results</h3>
+                    <span class="info-badge success-badge">
+                        ✓ Completed
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white rounded-xl p-4 shadow-sm border-2 border-orange-200">
+                        <div class="text-sm text-gray-600 font-medium mb-1">Asian Option Price</div>
+                        <div class="text-3xl font-bold text-orange-600" id="optionPrice">-</div>
+                        <div class="text-xs text-gray-500 mt-1">Monte Carlo estimate</div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <div class="text-sm text-gray-600 font-medium mb-1">Standard Error</div>
+                        <div class="text-2xl font-bold text-gray-900" id="stdError">-</div>
+                        <div class="text-xs text-gray-500 mt-1">±95% CI</div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <div class="text-sm text-gray-600 font-medium mb-1">Average Type</div>
+                        <div class="text-xl font-bold text-gray-900" id="avgTypeDisplay">-</div>
+                        <div class="text-xs text-gray-500 mt-1" id="avgFormula">-</div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <div class="text-sm text-gray-600 font-medium mb-1">Volatility Reduction</div>
+                        <div class="text-xl font-bold text-green-600" id="volReduction">~30%</div>
+                        <div class="text-xs text-gray-500 mt-1">vs standard option</div>
+                    </div>
+                </div>
             </div>
 
-            <div id="results" class="bg-indigo-50 p-4 rounded-lg space-y-2" style="display: none;">
-                <div class="text-sm text-gray-600">
-                    <strong>Asian Option Price:</strong> $<span id="optionPrice"></span>
-                </div>
-                <div class="text-sm text-gray-600">
-                    <strong>Standard Error:</strong> $<span id="stdError"></span>
-                </div>
-                <div class="text-sm text-gray-600">
-                    <strong>Average Type:</strong> <span id="avgTypeDisplay"></span>
+            <!-- Statistics -->
+            <div class="card">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">Average Price Statistics</h3>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-600">Min Avg</div>
+                        <div class="text-xl font-bold text-gray-900" id="minAvg">-</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-600">Mean Avg</div>
+                        <div class="text-xl font-bold text-gray-900" id="meanAvg">-</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-600">Max Avg</div>
+                        <div class="text-xl font-bold text-gray-900" id="maxAvg">-</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div>
-            <div id="payoffPlot" style="width: 100%; height: 500px;"></div>
+        <!-- Visualization -->
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Average Price Distribution</h3>
+                <div class="info-badge">
+                    First 100 simulations
+                </div>
+            </div>
+            <div id="plot" style="width: 100%; height: 450px;"></div>
         </div>
     </div>
 </div>
 
-<div class="grid md:grid-cols-2 gap-6">
-    <div class="card bg-blue-50">
-        <h3 class="text-xl font-bold text-blue-900 mb-2">Asian Options Theory</h3>
-        <p class="text-gray-700 mb-3">
-            <strong>Payoff Formulas:</strong>
-        </p>
-        <p class="font-mono text-sm mb-2">
-            Call: max(Aᴛ - K, 0)
-        </p>
-        <p class="font-mono text-sm mb-3">
-            Put: max(K - Aᴛ, 0)
-        </p>
-        <p class="text-gray-700 mb-2">
-            <strong>Average Types:</strong>
-        </p>
-        <ul class="text-sm text-gray-700 list-disc ml-5">
-            <li><strong>Arithmetic:</strong> Aᴛ = (1/n) ∑ Sᵢ</li>
-            <li><strong>Geometric:</strong> Aᴛ = (∏ Sᵢ)^(1/n)</li>
-        </ul>
-        <p class="text-sm text-gray-600 mt-3">
-            Geometric average options have closed-form solutions, while arithmetic average options require numerical methods like Monte Carlo.
-        </p>
+<!-- Theory Section -->
+<div class="grid lg:grid-cols-2 gap-6 mt-6">
+    <div class="card bg-gradient-to-br from-yellow-50 to-orange-50">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center text-white font-bold">
+                📚
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">Asian Options Theory</h3>
+        </div>
+        
+        <div class="space-y-4">
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Payoff Formulas</p>
+                <div class="space-y-2 text-sm">
+                    <div class="font-mono bg-gray-50 p-2 rounded border">
+                        Call: max(A<sub>T</sub> - K, 0)
+                    </div>
+                    <div class="font-mono bg-gray-50 p-2 rounded border">
+                        Put: max(K - A<sub>T</sub>, 0)
+                    </div>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">
+                    where A<sub>T</sub> is the average price over the period
+                </p>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Average Types</p>
+                <div class="space-y-2 text-sm">
+                    <div>
+                        <strong>Arithmetic:</strong> 
+                        <span class="font-mono">A<sub>T</sub> = (1/n) Σ S<sub>i</sub></span>
+                        <p class="text-gray-600 text-xs ml-4">Standard average, no closed form</p>
+                    </div>
+                    <div>
+                        <strong>Geometric:</strong> 
+                        <span class="font-mono">A<sub>T</sub> = (∏ S<sub>i</sub>)<sup>1/n</sup></span>
+                        <p class="text-gray-600 text-xs ml-4">Has closed-form solution</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Volatility Reduction</p>
+                <div class="font-mono text-sm bg-gray-50 p-3 rounded border">
+                    σ<sub>avg</sub> ≈ σ / √3
+                </div>
+                <p class="text-sm text-gray-600 mt-2">
+                    Averaging reduces effective volatility by approximately √3
+                </p>
+            </div>
+        </div>
     </div>
 
-    <div class="card bg-green-50">
-        <h3 class="text-xl font-bold text-green-900 mb-2">Features & Applications</h3>
+    <div class="card bg-gradient-to-br from-blue-50 to-cyan-50">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white font-bold">
+                💡
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">Features & Applications</h3>
+        </div>
+        
         <div class="space-y-3">
-            <div>
-                <p class="font-semibold text-green-800">Advantages</p>
-                <ul class="text-sm text-gray-700 list-disc ml-5">
-                    <li>Lower volatility than vanilla options</li>
-                    <li>More cost-effective</li>
-                    <li>Reduces manipulation risk</li>
-                    <li>Smoother payoff profile</li>
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Advantages</p>
+                <ul class="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                    <li><strong>Lower cost:</strong> 20-40% cheaper than vanilla options</li>
+                    <li><strong>Lower volatility:</strong> Reduced by ~40-60%</li>
+                    <li><strong>Anti-manipulation:</strong> Harder to manipulate average</li>
+                    <li><strong>Smoother payoff:</strong> Less sensitive to terminal spike</li>
                 </ul>
             </div>
-            <div>
-                <p class="font-semibold text-green-800">Common Uses</p>
-                <ul class="text-sm text-gray-700 list-disc ml-5">
-                    <li>Commodity trading</li>
-                    <li>Foreign exchange hedging</li>
-                    <li>Energy markets</li>
-                    <li>Employee stock options</li>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Common Applications</p>
+                <ul class="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                    <li><strong>Commodity trading:</strong> Average oil/gold prices</li>
+                    <li><strong>FX hedging:</strong> Average exchange rates</li>
+                    <li><strong>Energy markets:</strong> Average electricity prices</li>
+                    <li><strong>Employee compensation:</strong> Stock option grants</li>
+                </ul>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Market Practices</p>
+                <ul class="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                    <li>Arithmetic average more common in practice</li>
+                    <li>Daily fixing typically used for averaging</li>
+                    <li>Popular in Asian and commodity markets</li>
+                    <li>Often embedded in structured products</li>
                 </ul>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card bg-purple-50">
-    <h3 class="text-xl font-bold text-purple-900 mb-3">Pricing Comparison</h3>
-    <div class="grid md:grid-cols-3 gap-4 text-center">
-        <div class="p-4 bg-white rounded-lg">
-            <div class="text-lg font-bold text-purple-600">Asian Options</div>
-            <div class="text-sm text-gray-600 mt-2">Lower premium due to averaging effect</div>
+<!-- Comparison -->
+<div class="card bg-gradient-to-br from-purple-50 to-pink-50 mt-6">
+    <h3 class="text-xl font-bold text-gray-900 mb-4">Pricing Comparison</h3>
+    <div class="grid md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-lg p-4 text-center">
+            <div class="text-lg font-bold text-orange-600 mb-2">Asian Options</div>
+            <div class="text-3xl font-bold text-gray-900 mb-2">~70%</div>
+            <div class="text-sm text-gray-600">of vanilla option price</div>
         </div>
-        <div class="p-4 bg-white rounded-lg">
-            <div class="text-lg font-bold text-purple-600">European Options</div>
-            <div class="text-sm text-gray-600 mt-2">Higher premium, more sensitive to spot price</div>
+        <div class="bg-white rounded-lg p-4 text-center">
+            <div class="text-lg font-bold text-purple-600 mb-2">European Options</div>
+            <div class="text-3xl font-bold text-gray-900 mb-2">100%</div>
+            <div class="text-sm text-gray-600">baseline reference</div>
         </div>
-        <div class="p-4 bg-white rounded-lg">
-            <div class="text-lg font-bold text-purple-600">Volatility Reduction</div>
-            <div class="text-sm text-gray-600 mt-2">Averaging reduces volatility by ~1/√3</div>
+        <div class="bg-white rounded-lg p-4 text-center">
+            <div class="text-lg font-bold text-green-600 mb-2">Cost Savings</div>
+            <div class="text-3xl font-bold text-gray-900 mb-2">~30%</div>
+            <div class="text-sm text-gray-600">typical discount</div>
         </div>
     </div>
 </div>
@@ -181,64 +359,131 @@
 
 {% block extra_js %}
 <script>
+let currentResults = null;
+
 async function priceAsianOption() {
     const params = {
         S0: parseFloat(document.getElementById('S0').value),
         K: parseFloat(document.getElementById('K').value),
         T: parseFloat(document.getElementById('T').value),
-        r: parseFloat(document.getElementById('r').value),
-        sigma: parseFloat(document.getElementById('sigma').value),
+        r: parseFloat(document.getElementById('r').value) / 100,
+        sigma: parseFloat(document.getElementById('sigma').value) / 100,
         simulations: parseInt(document.getElementById('simulations').value),
         optionType: document.querySelector('input[name="optionType"]:checked').value,
         avgType: document.querySelector('input[name="avgType"]:checked').value
     };
     
+    // Validation
+    if (params.S0 <= 0 || params.K <= 0 || params.T <= 0 || params.sigma <= 0) {
+        showToast('All parameters must be positive', 'error');
+        return;
+    }
+    
     const priceBtn = document.getElementById('priceBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    
     priceBtn.disabled = true;
+    exportBtn.disabled = true;
     showLoading('loading');
-    document.getElementById('results').style.display = 'none';
+    document.getElementById('results').classList.add('hidden');
     
     try {
         const response = await fetch('/api/price-asian-option', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(params)
         });
         
+        if (!response.ok) throw new Error('Server error');
+        
         const data = await response.json();
+        currentResults = data;
         
         // Update results
-        document.getElementById('optionPrice').textContent = data.price.toFixed(4);
-        document.getElementById('stdError').textContent = data.stdError.toFixed(4);
-        document.getElementById('avgTypeDisplay').textContent = params.avgType.charAt(0).toUpperCase() + params.avgType.slice(1);
-        document.getElementById('results').style.display = 'block';
+        document.getElementById('optionPrice').textContent = '$' + data.price.toFixed(4);
+        document.getElementById('stdError').textContent = '$' + data.stdError.toFixed(4);
+        document.getElementById('avgTypeDisplay').textContent = 
+            params.avgType.charAt(0).toUpperCase() + params.avgType.slice(1);
+        document.getElementById('avgFormula').textContent = 
+            params.avgType === 'arithmetic' ? '(Σ Si) / n' : '(∏ Si)^(1/n)';
         
-        // Plot payoff distribution
-        const trace = {
-            x: data.payoffs.map((p, i) => i),
-            y: data.payoffs,
-            type: 'bar',
-            name: 'Payoffs',
-            marker: { color: '#4f46e5' }
-        };
+        // Statistics from avg_prices
+        if (data.avg_prices && data.avg_prices.length > 0) {
+            const avgPrices = data.avg_prices;
+            document.getElementById('minAvg').textContent = '$' + Math.min(...avgPrices).toFixed(2);
+            document.getElementById('meanAvg').textContent = '$' + (avgPrices.reduce((a,b) => a+b) / avgPrices.length).toFixed(2);
+            document.getElementById('maxAvg').textContent = '$' + Math.max(...avgPrices).toFixed(2);
+        }
         
-        const layout = {
-            title: 'Payoff Distribution (First 100 Simulations)',
-            xaxis: { title: 'Simulation' },
-            yaxis: { title: 'Payoff' },
-            showlegend: false
-        };
+        // Show results
+        document.getElementById('results').classList.remove('hidden');
+        exportBtn.disabled = false;
         
-        Plotly.newPlot('payoffPlot', [trace], layout);
+        // Plot distribution
+        plotDistribution(data.payoffs);
+        
+        showToast('Asian option pricing completed!', 'success');
         
     } catch (error) {
-        showError(error.message);
+        showToast('Calculation failed: ' + error.message, 'error');
+        console.error(error);
     } finally {
         hideLoading('loading');
         priceBtn.disabled = false;
     }
+}
+
+function plotDistribution(payoffs) {
+    const trace = {
+        x: payoffs,
+        type: 'histogram',
+        name: 'Payoff Distribution',
+        marker: { 
+            color: '#f97316',
+            line: { color: '#ea580c', width: 1 }
+        },
+        opacity: 0.8,
+        nbinsx: 40
+    };
+    
+    const layout = {
+        title: {
+            text: 'Asian Option Payoff Distribution',
+            font: { size: 18, weight: 'bold' }
+        },
+        xaxis: { 
+            title: 'Payoff ($)',
+            gridcolor: '#f3f4f6'
+        },
+        yaxis: { 
+            title: 'Frequency',
+            gridcolor: '#f3f4f6'
+        },
+        plot_bgcolor: '#fafafa',
+        paper_bgcolor: 'white',
+        showlegend: false,
+        margin: { l: 60, r: 30, t: 60, b: 60 }
+    };
+    
+    Plotly.newPlot('plot', [trace], layout, {responsive: true});
+}
+
+function exportResults() {
+    if (!currentResults) return;
+    
+    const csv = ['Payoff'];
+    currentResults.payoffs.forEach(payoff => {
+        csv.push(payoff);
+    });
+    
+    const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'asian_option_results.csv';
+    a.click();
+    
+    showToast('Results exported successfully!', 'success');
 }
 </script>
 {% endblock %}

@@ -3,266 +3,659 @@
 {% block title %}Convergence Analysis - Monte Carlo Lab{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2 class="text-2xl font-bold text-indigo-900 mb-4">Monte Carlo Convergence Analysis</h2>
-    <p class="text-gray-700 mb-4">
-        Analyze the convergence behavior of Monte Carlo simulation for option pricing.
-        Study the O(1/√N) convergence rate and understand how simulation size affects accuracy.
-    </p>
+<!-- Hero Card -->
+<div class="card border-l-4 border-blue-500">
+    <div class="flex items-start gap-4">
+        <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
+            📈
+        </div>
+        <div class="flex-1">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Monte Carlo Convergence Analysis</h2>
+            <p class="text-gray-600 leading-relaxed">
+                Analyze the convergence behavior of Monte Carlo simulation for option pricing and financial calculations.
+                Study the O(1/√N) convergence rate, understand confidence intervals, and visualize how simulation size
+                affects accuracy and precision.
+            </p>
+        </div>
+    </div>
+</div>
 
-    <div class="grid md:grid-cols-2 gap-6">
-        <div>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Initial Price (S₀)
-                    </label>
-                    <input type="number" id="S0" value="100" class="input-field">
+<div class="grid lg:grid-cols-2 gap-6">
+    <!-- Parameters Panel -->
+    <div class="space-y-6">
+        <!-- Simulation Parameters -->
+        <div class="card">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                    </svg>
                 </div>
+                <h3 class="text-xl font-bold text-gray-900">Simulation Parameters</h3>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Strike Price (K)
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Initial Price (S₀) <span class="text-gray-400 font-normal">$</span>
                     </label>
-                    <input type="number" id="K" value="100" class="input-field">
+                    <input type="number" id="S0" value="100" step="1" min="1" 
+                           class="input-field" placeholder="100">
+                    <p class="text-xs text-gray-500 mt-1">Current asset price</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Time to Maturity (T)
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Strike Price (K) <span class="text-gray-400 font-normal">$</span>
                     </label>
-                    <input type="number" id="T" value="1" step="0.1" class="input-field">
+                    <input type="number" id="K" value="100" step="1" min="1" 
+                           class="input-field" placeholder="100">
+                    <p class="text-xs text-gray-500 mt-1">Option strike price</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Risk-free Rate (r)
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Time to Maturity (T) <span class="text-gray-400 font-normal">years</span>
                     </label>
-                    <input type="number" id="r" value="0.05" step="0.01" class="input-field">
+                    <input type="number" id="T" value="1" step="0.1" min="0.1" max="10"
+                           class="input-field" placeholder="1.0">
+                    <p class="text-xs text-gray-500 mt-1">Option expiration</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Volatility (σ)
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Risk-free Rate (r) <span class="text-gray-400 font-normal">%</span>
                     </label>
-                    <input type="number" id="sigma" value="0.2" step="0.01" class="input-field">
+                    <input type="number" id="r" value="5.0" step="0.1" min="0" max="20"
+                           class="input-field" placeholder="5.0">
+                    <p class="text-xs text-gray-500 mt-1">Annual rate</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Max Simulations
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Volatility (σ) <span class="text-gray-400 font-normal">%</span>
                     </label>
-                    <input type="number" id="maxSimulations" value="100000" class="input-field">
+                    <input type="number" id="sigma" value="20.0" step="0.1" min="1" max="100"
+                           class="input-field" placeholder="20.0">
+                    <p class="text-xs text-gray-500 mt-1">Annual volatility</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Max Simulations <span class="text-gray-400 font-normal">#</span>
+                    </label>
+                    <input type="number" id="maxSimulations" value="100000" step="1000" min="1000" max="10000000"
+                           class="input-field" placeholder="100,000">
+                    <p class="text-xs text-gray-500 mt-1">Maximum paths to analyze</p>
                 </div>
             </div>
 
+            <!-- Option Configuration -->
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 mb-3">Option Configuration</h4>
+                
+                <div class="grid grid-cols-3 gap-3">
+                    <label class="flex flex-col items-center p-3 border-2 border-gray-200 rounded-xl bg-white cursor-pointer hover:border-blue-300 transition-colors">
+                        <input type="radio" name="optionType" value="call" checked class="sr-only peer">
+                        <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 text-lg mb-2 peer-checked:bg-blue-100 peer-checked:text-blue-600">
+                            ↗
+                        </div>
+                        <div class="font-medium text-gray-900">Call</div>
+                        <div class="text-xs text-gray-500">European</div>
+                    </label>
+                    
+                    <label class="flex flex-col items-center p-3 border-2 border-gray-200 rounded-xl bg-white cursor-pointer hover:border-blue-300 transition-colors">
+                        <input type="radio" name="optionType" value="put" class="sr-only peer">
+                        <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 text-lg mb-2 peer-checked:bg-blue-100 peer-checked:text-blue-600">
+                            ↘
+                        </div>
+                        <div class="font-medium text-gray-900">Put</div>
+                        <div class="text-xs text-gray-500">European</div>
+                    </label>
+                    
+                    <label class="flex flex-col items-center p-3 border-2 border-gray-200 rounded-xl bg-white cursor-pointer hover:border-blue-300 transition-colors">
+                        <input type="radio" name="optionType" value="digital" class="sr-only peer">
+                        <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 text-lg mb-2 peer-checked:bg-blue-100 peer-checked:text-blue-600">
+                            🔢
+                        </div>
+                        <div class="font-medium text-gray-900">Digital</div>
+                        <div class="text-xs text-gray-500">Binary</div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Convergence Points -->
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Option Type
-                </label>
-                <div class="flex gap-4">
-                    <label class="flex items-center">
-                        <input type="radio" name="optionType" value="call" checked class="mr-2">
-                        Call Option
+                <h4 class="text-lg font-semibold text-gray-900 mb-3">Convergence Points</h4>
+                <div class="space-y-2">
+                    <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 bg-gray-200 rounded flex items-center justify-center text-gray-700 text-xs">
+                                1
+                            </div>
+                            <span class="text-sm font-medium text-gray-700">10 - 1,000 simulations</span>
+                        </div>
+                        <input type="checkbox" name="convergencePoints" value="low" checked class="w-4 h-4 text-blue-600 rounded">
                     </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="optionType" value="put" class="mr-2">
-                        Put Option
+                    
+                    <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 bg-gray-200 rounded flex items-center justify-center text-gray-700 text-xs">
+                                2
+                            </div>
+                            <span class="text-sm font-medium text-gray-700">1,000 - 10,000 simulations</span>
+                        </div>
+                        <input type="checkbox" name="convergencePoints" value="medium" checked class="w-4 h-4 text-blue-600 rounded">
+                    </label>
+                    
+                    <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 bg-gray-200 rounded flex items-center justify-center text-gray-700 text-xs">
+                                3
+                            </div>
+                            <span class="text-sm font-medium text-gray-700">10,000 - 100,000 simulations</span>
+                        </div>
+                        <input type="checkbox" name="convergencePoints" value="high" checked class="w-4 h-4 text-blue-600 rounded">
+                    </label>
+                    
+                    <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 bg-gray-200 rounded flex items-center justify-center text-gray-700 text-xs">
+                                4
+                            </div>
+                            <span class="text-sm font-medium text-gray-700">100,000+ simulations</span>
+                        </div>
+                        <input type="checkbox" name="convergencePoints" value="very_high" class="w-4 h-4 text-blue-600 rounded">
                     </label>
                 </div>
             </div>
+        </div>
 
-            <button onclick="analyzeConvergence()" class="btn-primary w-full mb-4" id="analyzeBtn">
+        <!-- Convergence Insights Card -->
+        <div class="card bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200">
+            <h3 class="text-lg font-bold text-blue-900 mb-3">🎯 Convergence Insights</h3>
+            
+            <div class="space-y-3">
+                <div class="bg-white rounded-lg p-3">
+                    <p class="font-semibold text-sm text-gray-900 mb-1">O(1/√N) Convergence</p>
+                    <p class="text-xs text-gray-700">
+                        Monte Carlo error decreases with the square root of simulations. 
+                        <strong>To halve the error, you need 4× more samples.</strong>
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-3">
+                    <p class="font-semibold text-sm text-gray-900 mb-1">Practical Sample Sizes</p>
+                    <p class="text-xs text-gray-700">
+                        • 10³: Rough estimates (±10%)<br>
+                        • 10⁴: Standard accuracy (±1%)<br>
+                        • 10⁵: High accuracy (±0.1%)<br>
+                        • 10⁶: Research grade (±0.01%)
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-3">
+                    <p class="font-semibold text-sm text-gray-900 mb-1">Confidence Intervals</p>
+                    <p class="text-xs text-gray-700">
+                        Standard error = σ/√N<br>
+                        95% CI: estimate ± 1.96 × standard error<br>
+                        99% CI: estimate ± 2.58 × standard error
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-3">
+            <button onclick="analyzeConvergence()" id="analyzeBtn" 
+                    class="btn-primary w-full text-lg py-4 flex items-center justify-center gap-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
                 Analyze Convergence
             </button>
-
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p class="mt-2 text-gray-600">Running convergence analysis...</p>
-            </div>
-
-            <div id="results" class="bg-indigo-50 p-4 rounded-lg space-y-3" style="display: none;">
-                <h3 class="font-bold text-lg text-indigo-800">Convergence Results</h3>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="text-center p-3 bg-white rounded-lg">
-                        <div class="text-sm text-gray-600">Black-Scholes Price</div>
-                        <div class="text-lg font-bold text-green-600" id="bsPrice"></div>
-                    </div>
-                    <div class="text-center p-3 bg-white rounded-lg">
-                        <div class="text-sm text-gray-600">Final MC Estimate</div>
-                        <div class="text-lg font-bold text-blue-600" id="finalMCPrice"></div>
-                    </div>
-                </div>
-                
-                <div class="text-center p-3 bg-yellow-50 rounded-lg">
-                    <div class="text-sm text-yellow-800">Convergence Rate</div>
-                    <div class="text-lg font-bold text-yellow-700" id="convergenceRate"></div>
-                </div>
-            </div>
+            
+            <button onclick="runMultiConvergence()" id="multiConvergenceBtn"
+                    class="btn-secondary w-full py-3 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"></path>
+                </svg>
+                Compare Multiple Configurations
+            </button>
         </div>
 
-        <div>
-            <div id="convergencePlot" style="width: 100%; height: 500px;"></div>
+        <!-- Loading Indicator -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p class="mt-4 text-gray-600 font-medium">Analyzing Convergence...</p>
+            <p class="text-sm text-gray-500 mt-2">Running Monte Carlo simulations at multiple scales</p>
+        </div>
+
+        <!-- Results Panel -->
+        <div id="results" class="card bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 hidden">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Convergence Results</h3>
+                <span class="info-badge success-badge">
+                    ✓ Analyzed
+                </span>
+            </div>
+            
+            <!-- Analytical vs Monte Carlo -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-green-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-xs text-gray-600 font-medium">Black-Scholes Price</div>
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Analytical</span>
+                    </div>
+                    <div class="text-2xl font-bold text-green-600" id="bsPrice">-</div>
+                    <div class="text-xs text-gray-500 mt-1">Exact solution</div>
+                </div>
+                
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-blue-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-xs text-gray-600 font-medium">Final MC Estimate</div>
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Simulated</span>
+                    </div>
+                    <div class="text-2xl font-bold text-blue-600" id="finalMCPrice">-</div>
+                    <div class="text-xs text-gray-500 mt-1">N = <span id="finalN">-</span> simulations</div>
+                </div>
+            </div>
+            
+            <!-- Convergence Metrics -->
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <div class="bg-white rounded-lg p-3 text-center border border-orange-100">
+                    <div class="text-xs text-gray-600 font-medium mb-1">Convergence Rate</div>
+                    <div class="text-lg font-bold text-orange-600" id="convergenceRate">-</div>
+                    <div class="text-xs text-gray-500">Empirical slope</div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-3 text-center border border-purple-100">
+                    <div class="text-xs text-gray-600 font-medium mb-1">Final Error</div>
+                    <div class="text-lg font-bold text-purple-600" id="finalError">-</div>
+                    <div class="text-xs text-gray-500">Absolute</div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-3 text-center border border-red-100">
+                    <div class="text-xs text-gray-600 font-medium mb-1">Final Error %</div>
+                    <div class="text-lg font-bold text-red-600" id="finalErrorPercent">-</div>
+                    <div class="text-xs text-gray-500">Relative</div>
+                </div>
+            </div>
+            
+            <!-- Confidence Intervals -->
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="text-sm font-medium text-green-800">95% Confidence Interval</div>
+                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
+                        Statistical Precision
+                    </span>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <div class="text-2xl font-bold text-green-700" id="confidenceInterval">-</div>
+                    <div class="text-sm text-green-600">around MC estimate</div>
+                </div>
+                <div class="text-xs text-green-600 mt-1" id="ciWidth">-</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visualization Panel -->
+    <div class="space-y-6">
+        <!-- Error Convergence Plot -->
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Error Convergence</h3>
+                <span class="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-full font-medium">
+                    O(1/√N) Rate
+                </span>
+            </div>
+            <div id="errorPlot" style="width: 100%; height: 300px;"></div>
+        </div>
+
+        <!-- Price Convergence Plot -->
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Price Convergence</h3>
+                <span class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
+                    Path to True Value
+                </span>
+            </div>
+            <div id="pricePlot" style="width: 100%; height: 250px;"></div>
+        </div>
+
+        <!-- Confidence Interval Evolution -->
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Confidence Interval Evolution</h3>
+                <span class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
+                    Precision Improvement
+                </span>
+            </div>
+            <div id="confidencePlot" style="width: 100%; height: 250px;"></div>
         </div>
     </div>
 </div>
 
-<div class="grid md:grid-cols-2 gap-6 mb-6">
-    <div class="card bg-blue-50">
-        <h3 class="text-xl font-bold text-blue-900 mb-3">Theoretical Convergence</h3>
+<!-- Theory Section -->
+<div class="grid lg:grid-cols-2 gap-6 mt-6">
+    <div class="card bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white font-bold">
+                📐
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">Theoretical Foundation</h3>
+        </div>
         
         <div class="space-y-4">
-            <div>
-                <p class="font-semibold text-blue-800 mb-1">Law of Large Numbers</p>
-                <p class="font-mono text-sm bg-blue-100 p-2 rounded">
-                    (1/N) ∑ f(Xᵢ) → E[f(X)] as N → ∞
-                </p>
-                <p class="text-sm text-gray-700 mt-1">
-                    Monte Carlo estimates converge to the true expectation
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Law of Large Numbers</p>
+                <code class="text-sm bg-gray-100 px-3 py-2 rounded block">(1/N) ∑ f(Xᵢ) → E[f(X)] as N → ∞</code>
+                <p class="text-xs text-gray-500 mt-2">
+                    Monte Carlo estimates converge to the true expectation with probability 1
                 </p>
             </div>
             
-            <div>
-                <p class="font-semibold text-blue-800 mb-1">Central Limit Theorem</p>
-                <p class="font-mono text-sm bg-blue-100 p-2 rounded">
-                    √N (Ĥ_N - E[f(X)]) → N(0, σ²)
-                </p>
-                <p class="text-sm text-gray-700 mt-1">
-                    Estimation error is asymptotically normal
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Central Limit Theorem</p>
+                <code class="text-sm bg-gray-100 px-3 py-2 rounded block">√N (Ĥ_N - E[f(X)]) → N(0, σ²)</code>
+                <p class="text-xs text-gray-500 mt-2">
+                    Estimation error is asymptotically normal with variance σ²/N
                 </p>
             </div>
-            
-            <div>
-                <p class="font-semibold text-blue-800 mb-1">Convergence Rate</p>
-                <p class="font-mono text-sm bg-blue-100 p-2 rounded">
-                    Error ~ O(1/√N)
+
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Convergence Rate Analysis</p>
+                <p class="text-sm text-gray-700 mb-2">
+                    On log-log scale, error vs simulations should follow:
                 </p>
-                <p class="text-sm text-gray-700 mt-1">
-                    To halve error, need 4× more samples
+                <code class="text-sm bg-gray-100 px-3 py-2 rounded block">log(error) = log(C) - (1/2) × log(N)</code>
+                <p class="text-xs text-gray-500 mt-2">
+                    Slope of -1/2 indicates O(1/√N) convergence
                 </p>
             </div>
         </div>
     </div>
 
-    <div class="card bg-green-50">
-        <h3 class="text-xl font-bold text-green-900 mb-3">Practical Implications</h3>
+    <div class="card bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center text-white font-bold">
+                🎯
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">Practical Implications</h3>
+        </div>
         
-        <div class="space-y-3">
-            <div>
-                <p class="font-semibold text-green-800">Sample Size Guidelines</p>
-                <ul class="text-sm text-gray-700 list-disc ml-5">
-                    <li><strong>10³:</strong> Rough estimates (±10%)</li>
-                    <li><strong>10⁴:</strong> Standard accuracy (±1%)</li>
-                    <li><strong>10⁵:</strong> High accuracy (±0.1%)</li>
-                    <li><strong>10⁶:</strong> Research grade (±0.01%)</li>
+        <div class="space-y-4">
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Dimensionality Independence</p>
+                <div class="mb-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
+                    <div class="text-sm text-green-800 font-medium">Key Advantage</div>
+                    <p class="text-xs text-gray-700 mt-1">
+                        Monte Carlo maintains O(1/√N) convergence regardless of problem dimension,
+                        unlike numerical integration methods which suffer from the "curse of dimensionality."
+                    </p>
+                </div>
+                
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>• 1D problem: Same convergence as 100D problem</li>
+                    <li>• Ideal for high-dimensional financial instruments</li>
+                    <li>• Makes complex derivatives tractable</li>
+                    <li>• Scales linearly with dimension (not exponentially)</li>
                 </ul>
             </div>
             
-            <div>
-                <p class="font-semibold text-green-800">Dimensionality Independence</p>
-                <p class="text-sm text-gray-700">
-                    Monte Carlo maintains O(1/√N) convergence regardless of problem dimension, 
-                    unlike numerical integration methods.
-                </p>
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Computational Trade-offs</p>
+                
+                <div class="space-y-2">
+                    <div class="p-2 bg-blue-50 rounded">
+                        <p class="font-semibold text-xs text-blue-700 mb-1">Accuracy vs Computation Time</p>
+                        <ul class="text-xs text-gray-600 space-y-0.5">
+                            <li>• 10× more accuracy → 100× more computation</li>
+                            <li>• Diminishing returns beyond certain point</li>
+                            <li>• Optimal N depends on required precision</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="p-2 bg-blue-50 rounded">
+                        <p class="font-semibold text-xs text-blue-700 mb-1">Parallelization Benefits</p>
+                        <ul class="text-xs text-gray-600 space-y-0.5">
+                            <li>• Embarrassingly parallel (independent samples)</li>
+                            <li>• Linear speedup with multiple cores</li>
+                            <li>• GPU acceleration can provide 100-1000× speedup</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
             
-            <div>
-                <p class="font-semibold text-green-800">Confidence Intervals</p>
-                <p class="text-sm text-gray-700">
-                    Standard error = σ/√N, where σ is sample standard deviation.
-                    95% CI: estimate ± 1.96 × standard error
-                </p>
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Error Sources</p>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="text-center p-2 bg-red-50 rounded">
+                        <div class="text-lg mb-1">📊</div>
+                        <div class="font-semibold">Statistical</div>
+                        <div class="text-gray-600">O(1/√N)</div>
+                    </div>
+                    <div class="text-center p-2 bg-orange-50 rounded">
+                        <div class="text-lg mb-1">⏱️</div>
+                        <div class="font-semibold">Discretization</div>
+                        <div class="text-gray-600">Time steps</div>
+                    </div>
+                    <div class="text-center p-2 bg-yellow-50 rounded">
+                        <div class="text-lg mb-1">🔢</div>
+                        <div class="font-semibold">Approximation</div>
+                        <div class="text-gray-600">Methods</div>
+                    </div>
+                    <div class="text-center p-2 bg-gray-50 rounded">
+                        <div class="text-lg mb-1">💻</div>
+                        <div class="font-semibold">Round-off</div>
+                        <div class="text-gray-600">Precision</div>
+                    </div>
+                </div>
             </div>
+        </div>
+        
+        <div class="mt-4 p-3 bg-purple-100 rounded-lg">
+            <p class="text-xs text-purple-800">
+                <strong>Key Insight:</strong> Total Error² ≈ Statistical Error² + Discretization Error².
+                Balance both for optimal computational efficiency.
+            </p>
         </div>
     </div>
 </div>
 
-<div class="card bg-purple-50">
-    <h3 class="text-xl font-bold text-purple-900 mb-3">Convergence in Financial Applications</h3>
+<!-- Advanced Topics Section -->
+<div class="grid md:grid-cols-3 gap-6 mt-6">
+    <div class="card bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
+        <h3 class="text-xl font-bold text-green-900 mb-4">⚡ Weak vs Strong Convergence</h3>
+        
+        <div class="space-y-4">
+            <div class="bg-white rounded-lg p-4">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
+                        📊
+                    </div>
+                    <div>
+                        <p class="font-semibold text-green-800">Weak Convergence</p>
+                        <p class="text-xs text-gray-600">Distribution accuracy</p>
+                    </div>
+                </div>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>• Measures error in expectations</li>
+                    <li>• Rate: O(1/√N) for Monte Carlo</li>
+                    <li>• Sufficient for option prices, VaR</li>
+                    <li>• Easier to achieve</li>
+                </ul>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                        🎯
+                    </div>
+                    <div>
+                        <p class="font-semibold text-blue-800">Strong Convergence</p>
+                        <p class="text-xs text-gray-600">Path-wise accuracy</p>
+                    </div>
+                </div>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>• Measures error in sample paths</li>
+                    <li>• Rate depends on discretization</li>
+                    <li>• Needed for Greeks, hedging</li>
+                    <li>• More difficult to achieve</li>
+                </ul>
+            </div>
+        </div>
+    </div>
     
-    <div class="grid md:grid-cols-3 gap-4">
-        <div class="p-4 bg-white rounded-lg">
-            <p class="font-semibold text-purple-800 mb-2">Option Pricing</p>
-            <ul class="text-sm text-gray-700 list-disc ml-5">
-                <li>European options: Fast convergence</li>
-                <li>American options: Slower due to regression</li>
-                <li>Exotic options: Path-dependent convergence</li>
-                <li>Barrier options: Sensitive to monitoring</li>
-            </ul>
-        </div>
+    <div class="card bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200">
+        <h3 class="text-xl font-bold text-orange-900 mb-4">🚀 Advanced Methods</h3>
         
-        <div class="p-4 bg-white rounded-lg">
-            <p class="font-semibold text-purple-800 mb-2">Risk Measures</p>
-            <ul class="text-sm text-gray-700 list-disc ml-5">
-                <li>VaR: Slower for high confidence levels</li>
-                <li>Expected Shortfall: Requires more samples</li>
-                <li>Greeks: Finite difference amplifies error</li>
-                <li>Credit risk: Rare event challenges</li>
-            </ul>
-        </div>
-        
-        <div class="p-4 bg-white rounded-lg">
-            <p class="font-semibold text-purple-800 mb-2">Computational Trade-offs</p>
-            <ul class="text-sm text-gray-700 list-disc ml-5">
-                <li>Accuracy vs computation time</li>
-                <li>Memory requirements</li>
-                <li>Parallelization benefits</li>
-                <li>Variance reduction impact</li>
-            </ul>
-        </div>
-    </div>
-</div>
-
-<div class="grid md:grid-cols-2 gap-6">
-    <div class="card bg-orange-50">
-        <h3 class="text-xl font-bold text-orange-900 mb-2">Error Analysis</h3>
-        
-        <div class="space-y-3">
-            <div>
-                <p class="font-semibold text-orange-800">Sources of Error</p>
-                <ul class="text-sm text-gray-700 list-disc ml-5">
-                    <li><strong>Statistical error:</strong> O(1/√N) from random sampling</li>
-                    <li><strong>Discretization error:</strong> From time stepping in SDEs</li>
-                    <li><strong>Approximation error:</strong> From numerical methods</li>
-                    <li><strong>Round-off error:</strong> From finite precision arithmetic</li>
-                </ul>
-            </div>
-            
-            <div>
-                <p class="font-semibold text-orange-800">Error Decomposition</p>
-                <p class="text-sm text-gray-700">
-                    Total Error² ≈ Statistical Error² + Discretization Error²
-                </p>
-                <p class="text-xs text-gray-600 mt-1">
-                    Balance both errors for optimal computational efficiency
-                </p>
-            </div>
-        </div>
-    </div>
-
-    <div class="card bg-red-50">
-        <h3 class="text-xl font-bold text-red-900 mb-2">Advanced Topics</h3>
-        
-        <div class="space-y-3">
-            <div>
-                <p class="font-semibold text-red-800">Multi-level Monte Carlo</p>
-                <p class="text-sm text-gray-700">
-                    Uses hierarchy of discretization levels to reduce computational cost 
+        <div class="space-y-4">
+            <div class="bg-white rounded-lg p-3">
+                <p class="font-semibold text-orange-800 mb-2">Multi-level Monte Carlo</p>
+                <p class="text-sm text-gray-700 mb-2">
+                    Uses hierarchy of discretization levels to reduce computational cost
                     while maintaining accuracy for SDE simulations.
                 </p>
+                <div class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded inline-block">
+                    Complexity: O(ε⁻²) vs O(ε⁻³) for standard
+                </div>
             </div>
             
-            <div>
-                <p class="font-semibold text-red-800">Quasi-Monte Carlo</p>
-                <p class="text-sm text-gray-700">
-                    Uses low-discrepancy sequences (Sobol, Halton) to achieve O(1/N) 
+            <div class="bg-white rounded-lg p-3">
+                <p class="font-semibold text-orange-800 mb-2">Quasi-Monte Carlo</p>
+                <p class="text-sm text-gray-700 mb-2">
+                    Uses low-discrepancy sequences (Sobol, Halton) to achieve O((log N)ᵏ/N)
                     convergence for smooth problems.
                 </p>
+                <div class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded inline-block">
+                    Faster than O(1/√N)
+                </div>
             </div>
             
-            <div>
-                <p class="font-semibold text-red-800">Weak vs Strong Convergence</p>
+            <div class="bg-white rounded-lg p-3">
+                <p class="font-semibold text-orange-800 mb-2">Sequential Monte Carlo</p>
                 <p class="text-sm text-gray-700">
-                    <strong>Weak:</strong> Distribution accuracy (for expectations)<br>
-                    <strong>Strong:</strong> Path-wise accuracy (for sensitivities)
+                    Adaptively allocates samples based on variance, optimizing computational
+                    resources for required accuracy.
                 </p>
             </div>
+        </div>
+    </div>
+    
+    <div class="card bg-gradient-to-br from-red-50 to-rose-50 border-2 border-red-200">
+        <h3 class="text-xl font-bold text-red-900 mb-4">⚠️ Convergence Challenges</h3>
+        
+        <div class="space-y-4">
+            <div class="bg-white rounded-lg p-3">
+                <p class="font-semibold text-red-800 mb-1">Rare Events</p>
+                <ul class="text-xs text-gray-600 space-y-0.5">
+                    <li>• Deep out-of-money options</li>
+                    <li>• Extreme VaR (99.9% confidence)</li>
+                    <li>• Credit default modeling</li>
+                    <li>• Requires importance sampling</li>
+                </ul>
+            </div>
+            
+            <div class="bg-white rounded-lg p-3">
+                <p class="font-semibold text-red-800 mb-1">American Options</p>
+                <ul class="text-xs text-gray-600 space-y-0.5">
+                    <li>• Early exercise boundary</li>
+                    <li>• Regression-based methods</li>
+                    <li>• Slower convergence</li>
+                    <li>• Higher computational cost</li>
+                </ul>
+            </div>
+            
+            <div class="bg-white rounded-lg p-3">
+                <p class="font-semibold text-red-800 mb-1">Path-dependent Options</p>
+                <ul class="text-xs text-gray-600 space-y-0.5">
+                    <li>• Asian, barrier, lookback</li>
+                    <li>• Monitoring frequency matters</li>
+                    <li>• Discretization error significant</li>
+                    <li>• Complex convergence patterns</li>
+                </ul>
+            </div>
+            
+            <div class="bg-white rounded-lg p-3">
+                <p class="font-semibold text-red-800 mb-1">High-dimensional Problems</p>
+                <ul class="text-xs text-gray-600 space-y-0.5">
+                    <li>• Basket options (>10 assets)</li>
+                    <li>• Interest rate models</li>
+                    <li>• Correlation structure important</li>
+                    <li>• Variance reduction critical</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Application Examples -->
+<div class="card mt-6 bg-gradient-to-br from-gray-50 to-slate-50 border-2 border-gray-200">
+    <h3 class="text-xl font-bold text-gray-900 mb-4">📊 Convergence in Financial Applications</h3>
+    
+    <div class="grid md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl p-4">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 text-xl mb-3">
+                📈
+            </div>
+            <h4 class="font-semibold text-gray-900 mb-2">Vanilla Options</h4>
+            <p class="text-sm text-gray-700">
+                Fast O(1/√N) convergence. 10⁴ simulations typically yield ±1% accuracy.
+            </p>
+        </div>
+        
+        <div class="bg-white rounded-xl p-4">
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 text-xl mb-3">
+                🎯
+            </div>
+            <h4 class="font-semibold text-gray-900 mb-2">Exotic Options</h4>
+            <p class="text-sm text-gray-700">
+                Slower convergence due to path-dependence. May require 10⁵-10⁶ simulations.
+            </p>
+        </div>
+        
+        <div class="bg-white rounded-xl p-4">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 text-xl mb-3">
+                🛡️
+            </div>
+            <h4 class="font-semibold text-gray-900 mb-2">Risk Measures</h4>
+            <p class="text-sm text-gray-700">
+                VaR converges slower at high confidence levels. Extreme quantiles challenging.
+            </p>
+        </div>
+        
+        <div class="bg-white rounded-xl p-4">
+            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center text-red-600 text-xl mb-3">
+                ⚡
+            </div>
+            <h4 class="font-semibold text-gray-900 mb-2">Real-time Pricing</h4>
+            <p class="text-sm text-gray-700">
+                Limited to 10³-10⁴ simulations. Requires variance reduction for acceptable accuracy.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Academic References -->
+<div class="card mt-6 bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200">
+    <h3 class="text-xl font-bold text-gray-900 mb-4">📚 Academic References</h3>
+    
+    <div class="grid md:grid-cols-2 gap-4">
+        <div class="p-4 bg-white rounded-lg">
+            <p class="font-semibold text-indigo-800 mb-2">Glasserman (2003)</p>
+            <p class="text-sm text-gray-700">
+                "Monte Carlo Methods in Financial Engineering" provides comprehensive analysis
+                of convergence rates, error analysis, and advanced acceleration techniques.
+            </p>
+        </div>
+        
+        <div class="p-4 bg-white rounded-lg">
+            <p class="font-semibold text-indigo-800 mb-2">Kloeden & Platen (1992)</p>
+            <p class="text-sm text-gray-700">
+                "Numerical Solution of Stochastic Differential Equations" establishes
+                convergence theory for SDE discretization methods used in finance.
+            </p>
         </div>
     </div>
 </div>
@@ -270,21 +663,38 @@
 
 {% block extra_js %}
 <script>
+let isAnalyzing = false;
+
 async function analyzeConvergence() {
+    if (isAnalyzing) return;
+    
+    const selectedPoints = Array.from(document.querySelectorAll('input[name="convergencePoints"]:checked'))
+        .map(checkbox => checkbox.value);
+    
+    if (selectedPoints.length === 0) {
+        showError('Please select at least one convergence point range');
+        return;
+    }
+    
+    const optionType = document.querySelector('input[name="optionType"]:checked').value;
+    
     const params = {
         S0: parseFloat(document.getElementById('S0').value),
         K: parseFloat(document.getElementById('K').value),
         T: parseFloat(document.getElementById('T').value),
-        r: parseFloat(document.getElementById('r').value),
-        sigma: parseFloat(document.getElementById('sigma').value),
+        r: parseFloat(document.getElementById('r').value) / 100,
+        sigma: parseFloat(document.getElementById('sigma').value) / 100,
         maxSimulations: parseInt(document.getElementById('maxSimulations').value),
-        optionType: document.querySelector('input[name="optionType"]:checked').value
+        convergence_points: selectedPoints,
+        option_type: optionType
     };
     
     const analyzeBtn = document.getElementById('analyzeBtn');
+    isAnalyzing = true;
     analyzeBtn.disabled = true;
+    analyzeBtn.innerHTML = '<div class="spinner-small mr-2"></div>Analyzing...';
     showLoading('loading');
-    document.getElementById('results').style.display = 'none';
+    hideElement('results');
     
     try {
         const response = await fetch('/api/analyze-convergence', {
@@ -295,59 +705,90 @@ async function analyzeConvergence() {
             body: JSON.stringify(params)
         });
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
         const data = await response.json();
         
-        if (!data.results || data.results.length === 0) {
-            throw new Error('No convergence data received');
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Analysis failed');
         }
         
         // Update results
-        document.getElementById('bsPrice').textContent = '$' + data.bsPrice.toFixed(4);
+        document.getElementById('bsPrice').textContent = '$' + data.black_scholes_price.toFixed(4);
         
         const finalResult = data.results[data.results.length - 1];
-        document.getElementById('finalMCPrice').textContent = '$' + finalResult.mcPrice.toFixed(4);
+        document.getElementById('finalMCPrice').textContent = '$' + finalResult.mc_price.toFixed(4);
+        document.getElementById('finalN').textContent = finalResult.simulations.toLocaleString();
         
-        // Calculate empirical convergence rate using linear regression on log-log scale
-        const logN = data.results.map(r => Math.log(r.simulations));
-        const logError = data.results.map(r => Math.log(r.meanError));
+        const finalError = Math.abs(finalResult.mc_price - data.black_scholes_price);
+        const finalErrorPercent = (finalError / data.black_scholes_price * 100).toFixed(3);
         
-        // Linear regression for slope
-        const n = logN.length;
-        const sumX = logN.reduce((a, b) => a + b, 0);
-        const sumY = logError.reduce((a, b) => a + b, 0);
-        const sumXY = logN.reduce((sum, x, i) => sum + x * logError[i], 0);
-        const sumX2 = logN.reduce((sum, x) => sum + x * x, 0);
+        document.getElementById('finalError').textContent = '$' + finalError.toFixed(4);
+        document.getElementById('finalErrorPercent').textContent = finalErrorPercent + '%';
         
-        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-        const empiricalRate = -slope; // Negative because error decreases
-        
+        // Calculate empirical convergence rate
+        const empiricalRate = calculateConvergenceRate(data.results);
         document.getElementById('convergenceRate').textContent = 
-            `Empirical: ${empiricalRate.toFixed(2)} (Theoretical: 0.50)`;
+            empiricalRate.toFixed(3) + ' (ideal: 0.500)';
         
-        document.getElementById('results').style.display = 'block';
+        // Calculate confidence interval
+        const stdError = finalResult.std_error || (finalResult.std / Math.sqrt(finalResult.simulations));
+        const ciWidth = 1.96 * stdError;
+        const ciLower = (finalResult.mc_price - ciWidth).toFixed(4);
+        const ciUpper = (finalResult.mc_price + ciWidth).toFixed(4);
         
-        // Create convergence plots
-        createConvergencePlot(data.results, data.bsPrice);
+        document.getElementById('confidenceInterval').textContent = 
+            `[$${ciLower}, $${ciUpper}]`;
+        document.getElementById('ciWidth').textContent = 
+            `Width: $${(ciWidth * 2).toFixed(4)} (±$${ciWidth.toFixed(4)})`;
+        
+        showElement('results');
+        
+        // Create visualizations
+        createErrorPlot(data.results, data.black_scholes_price);
+        createPricePlot(data.results, data.black_scholes_price);
+        createConfidencePlot(data.results);
         
     } catch (error) {
-        console.error('Convergence analysis error:', error);
         showError('Convergence analysis failed: ' + error.message);
+        console.error('Analysis error:', error);
     } finally {
-        hideLoading('loading');
+        isAnalyzing = false;
         analyzeBtn.disabled = false;
+        analyzeBtn.innerHTML = `
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            Analyze Convergence
+        `;
+        hideLoading('loading');
     }
 }
 
-function createConvergencePlot(results, bsPrice) {
-    const simulations = results.map(r => r.simulations);
-    const errors = results.map(r => r.meanError);
-    const mcPrices = results.map(r => r.mcPrice);
+function runMultiConvergence() {
+    showError('Multi-configuration comparison feature coming soon!');
+}
+
+function calculateConvergenceRate(results) {
+    // Calculate empirical convergence rate using linear regression on log-log scale
+    if (results.length < 3) return 0.5;
     
-    // Error convergence plot
+    const logN = results.map(r => Math.log(r.simulations));
+    const logError = results.map(r => Math.log(Math.abs(r.error || Math.abs(r.mc_price - r.bs_price))));
+    
+    const n = logN.length;
+    const sumX = logN.reduce((a, b) => a + b, 0);
+    const sumY = logError.reduce((a, b) => a + b, 0);
+    const sumXY = logN.reduce((sum, x, i) => sum + x * logError[i], 0);
+    const sumX2 = logN.reduce((sum, x) => sum + x * x, 0);
+    
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    return -slope; // Negative because error decreases with N
+}
+
+function createErrorPlot(results, bsPrice) {
+    const simulations = results.map(r => r.simulations);
+    const errors = results.map(r => Math.abs(r.error || Math.abs(r.mc_price - bsPrice)));
+    
+    // Empirical error trace
     const errorTrace = {
         x: simulations,
         y: errors,
@@ -355,10 +796,11 @@ function createConvergencePlot(results, bsPrice) {
         mode: 'lines+markers',
         name: 'Empirical Error',
         line: { color: '#ef4444', width: 3 },
-        marker: { size: 8 }
+        marker: { size: 8, symbol: 'circle' },
+        hovertemplate: 'N=%{x:,}<br>Error=$%{y:.4f}<br><extra></extra>'
     };
     
-    // Theoretical convergence line (scaled to match starting point)
+    // Theoretical 1/√N line (scaled to match starting point)
     const theoreticalErrors = simulations.map(n => errors[0] * Math.sqrt(simulations[0]/n));
     const theoreticalTrace = {
         x: simulations,
@@ -366,63 +808,378 @@ function createConvergencePlot(results, bsPrice) {
         type: 'scatter',
         mode: 'lines',
         name: 'Theoretical O(1/√N)',
-        line: { color: '#3b82f6', width: 2, dash: 'dash' }
+        line: { color: '#3b82f6', width: 2, dash: 'dash' },
+        hovertemplate: 'N=%{x:,}<br>Theoretical=$%{y:.4f}<br><extra></extra>'
     };
     
-    const errorLayout = {
-        title: 'Monte Carlo Convergence - Error vs Simulations',
+    // Error bounds (95% confidence intervals for error estimate)
+    const stdErrors = results.map(r => r.std_error || (r.std / Math.sqrt(r.simulations)));
+    const errorUpper = errors.map((e, i) => e + 1.96 * stdErrors[i]);
+    const errorLower = errors.map((e, i) => Math.max(0, e - 1.96 * stdErrors[i]));
+    
+    const confidenceTrace = {
+        x: [...simulations, ...simulations.slice().reverse()],
+        y: [...errorUpper, ...errorLower.slice().reverse()],
+        fill: 'toself',
+        fillcolor: 'rgba(239, 68, 68, 0.1)',
+        line: { color: 'transparent' },
+        name: '95% Error Confidence',
+        showlegend: true
+    };
+    
+    const layout = {
+        title: {
+            text: 'Monte Carlo Error Convergence (Log-Log Scale)',
+            font: { size: 14, weight: 'bold' }
+        },
         xaxis: { 
-            title: 'Number of Simulations',
-            type: 'log'
+            title: 'Number of Simulations (N)',
+            type: 'log',
+            tickformat: ',.0f'
         },
         yaxis: { 
             title: 'Absolute Error ($)',
-            type: 'log'
+            type: 'log',
+            tickformat: '$.4f'
         },
         showlegend: true,
-        plot_bgcolor: '#f8fafc',
-        paper_bgcolor: '#f8fafc'
+        legend: {
+            x: 0.02,
+            y: 0.98,
+            bgcolor: 'rgba(255,255,255,0.9)'
+        },
+        plot_bgcolor: '#fafafa',
+        paper_bgcolor: 'white',
+        margin: { l: 60, r: 30, t: 50, b: 60 }
     };
     
-    // Price convergence plot
+    Plotly.newPlot('errorPlot', [errorTrace, theoreticalTrace, confidenceTrace], layout);
+}
+
+function createPricePlot(results, bsPrice) {
+    const simulations = results.map(r => r.simulations);
+    const prices = results.map(r => r.mc_price);
+    const stdErrors = results.map(r => r.std_error || (r.std / Math.sqrt(r.simulations)));
+    
+    // Monte Carlo prices trace
     const priceTrace = {
         x: simulations,
-        y: mcPrices,
+        y: prices,
         type: 'scatter',
         mode: 'lines+markers',
         name: 'MC Price',
-        line: { color: '#10b981', width: 2 }
+        line: { color: '#10b981', width: 2 },
+        marker: { size: 6 },
+        hovertemplate: 'N=%{x:,}<br>Price=$%{y:.4f}<br><extra></extra>'
     };
     
-    const bsLineTrace = {
+    // Black-Scholes reference line
+    const bsTrace = {
         x: [simulations[0], simulations[simulations.length-1]],
         y: [bsPrice, bsPrice],
         type: 'scatter',
         mode: 'lines',
-        name: 'Black-Scholes Price',
-        line: { color: '#8b5cf6', width: 2, dash: 'dot' }
+        name: 'Black-Scholes',
+        line: { color: '#8b5cf6', width: 2, dash: 'dash' },
+        hovertemplate: 'BS Price=$%{y:.4f}<br><extra></extra>'
     };
     
-    const priceLayout = {
-        title: 'Price Convergence vs Simulations',
-        xaxis: { 
-            title: 'Number of Simulations',
-            type: 'log'
+    // Confidence interval bands
+    const ciUpper = prices.map((p, i) => p + 1.96 * stdErrors[i]);
+    const ciLower = prices.map((p, i) => p - 1.96 * stdErrors[i]);
+    
+    const ciTrace = {
+        x: [...simulations, ...simulations.slice().reverse()],
+        y: [...ciUpper, ...ciLower.slice().reverse()],
+        fill: 'toself',
+        fillcolor: 'rgba(16, 185, 129, 0.1)',
+        line: { color: 'transparent' },
+        name: '95% Confidence Interval',
+        showlegend: true
+    };
+    
+    const layout = {
+        title: {
+            text: 'Price Convergence with Confidence Intervals',
+            font: { size: 14, weight: 'bold' }
         },
-        yaxis: { title: 'Option Price ($)' },
+        xaxis: { 
+            title: 'Number of Simulations (N)',
+            type: 'log',
+            tickformat: ',.0f'
+        },
+        yaxis: { 
+            title: 'Option Price ($)',
+            tickformat: '$.2f'
+        },
         showlegend: true,
-        plot_bgcolor: '#f8fafc',
-        paper_bgcolor: '#f8fafc'
+        legend: {
+            x: 0.02,
+            y: 0.98,
+            bgcolor: 'rgba(255,255,255,0.9)'
+        },
+        plot_bgcolor: '#fafafa',
+        paper_bgcolor: 'white',
+        margin: { l: 60, r: 30, t: 50, b: 60 }
     };
     
-    // Create subplots
-    const combinedTrace1 = [errorTrace, theoreticalTrace];
-    const combinedTrace2 = [priceTrace, bsLineTrace];
-    
-    Plotly.newPlot('convergencePlot', combinedTrace1, errorLayout);
-    
-    // You might want to add a second plot div for price convergence
-    // For now, we'll just show the error convergence
+    Plotly.newPlot('pricePlot', [priceTrace, bsTrace, ciTrace], layout);
 }
+
+function createConfidencePlot(results) {
+    const simulations = results.map(r => r.simulations);
+    const stdErrors = results.map(r => r.std_error || (r.std / Math.sqrt(r.simulations)));
+    const ciWidths = stdErrors.map(se => 2 * 1.96 * se); // 95% CI width
+    
+    const ciTrace = {
+        x: simulations,
+        y: ciWidths,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: '95% CI Width',
+        line: { color: '#3b82f6', width: 3 },
+        marker: { size: 8 },
+        hovertemplate: 'N=%{x:,}<br>CI Width=$%{y:.4f}<br><extra></extra>'
+    };
+    
+    // Theoretical CI width line (assuming constant variance)
+    const theoreticalCIWidths = simulations.map(n => ciWidths[0] * Math.sqrt(simulations[0]/n));
+    const theoreticalTrace = {
+        x: simulations,
+        y: theoreticalCIWidths,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Theoretical O(1/√N)',
+        line: { color: '#ef4444', width: 2, dash: 'dash' },
+        hovertemplate: 'N=%{x:,}<br>Theoretical=$%{y:.4f}<br><extra></extra>'
+    };
+    
+    const layout = {
+        title: {
+            text: 'Confidence Interval Width Convergence',
+            font: { size: 14, weight: 'bold' }
+        },
+        xaxis: { 
+            title: 'Number of Simulations (N)',
+            type: 'log',
+            tickformat: ',.0f'
+        },
+        yaxis: { 
+            title: '95% CI Width ($)',
+            type: 'log',
+            tickformat: '$.4f'
+        },
+        showlegend: true,
+        legend: {
+            x: 0.02,
+            y: 0.98,
+            bgcolor: 'rgba(255,255,255,0.9)'
+        },
+        plot_bgcolor: '#fafafa',
+        paper_bgcolor: 'white',
+        margin: { l: 60, r: 30, t: 50, b: 60 }
+    };
+    
+    Plotly.newPlot('confidencePlot', [ciTrace, theoreticalTrace], layout);
+}
+
+// Utility functions
+function showLoading(elementId) {
+    document.getElementById(elementId).classList.remove('hidden');
+}
+
+function hideLoading(elementId) {
+    document.getElementById(elementId).classList.add('hidden');
+}
+
+function showElement(elementId) {
+    document.getElementById(elementId).classList.remove('hidden');
+}
+
+function hideElement(elementId) {
+    document.getElementById(elementId).classList.add('hidden');
+}
+
+function showError(message) {
+    // Remove any existing error notifications
+    const existingErrors = document.querySelectorAll('.error-notification');
+    existingErrors.forEach(error => error.remove());
+    
+    // Create error notification
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-notification fixed top-4 right-4 bg-red-100 border-2 border-red-400 text-red-700 px-4 py-3 rounded-xl shadow-lg z-50 max-w-md';
+    errorDiv.innerHTML = `
+        <div class="flex justify-between items-start">
+            <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-sm">
+                    !
+                </div>
+                <div class="flex-1">
+                    <strong class="font-bold text-red-900">Analysis Error!</strong>
+                    <span class="block mt-1 text-sm">${message}</span>
+                </div>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-red-700 hover:text-red-900">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    `;
+    document.body.appendChild(errorDiv);
+    
+    // Auto remove after 8 seconds
+    setTimeout(() => {
+        if (errorDiv.parentElement) {
+            errorDiv.remove();
+        }
+    }, 8000);
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners for parameter validation
+    document.getElementById('S0').addEventListener('change', function() {
+        if (this.value <= 0) this.value = 100;
+    });
+    
+    document.getElementById('K').addEventListener('change', function() {
+        if (this.value <= 0) this.value = 100;
+    });
+    
+    document.getElementById('sigma').addEventListener('change', function() {
+        if (this.value <= 0) this.value = 20;
+        if (this.value > 100) this.value = 100;
+    });
+    
+    document.getElementById('maxSimulations').addEventListener('change', function() {
+        if (this.value < 1000) this.value = 1000;
+        if (this.value > 10000000) this.value = 10000000;
+    });
+    
+    // Calculate on page load after a delay
+    setTimeout(analyzeConvergence, 1000);
+});
 </script>
+
+<style>
+.input-field {
+    transition: all 0.2s ease-in-out;
+}
+
+.input-field:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.loading {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.error-notification {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.hidden {
+    display: none !important;
+}
+
+.info-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.success-badge {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    color: #374151;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: 1px solid #d1d5db;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+    transform: translateY(-1px);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e5e7eb;
+    border-top: 4px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+.spinner-small {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
 {% endblock %}

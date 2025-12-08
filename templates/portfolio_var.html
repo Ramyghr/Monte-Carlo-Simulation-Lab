@@ -3,80 +3,125 @@
 {% block title %}Portfolio Value at Risk - Monte Carlo Lab{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2 class="text-2xl font-bold text-indigo-900 mb-4">Portfolio Value at Risk Analysis</h2>
-    <p class="text-gray-700 mb-4">
-        Calculate Value at Risk for multi-asset portfolios using Monte Carlo simulation with correlated returns.
-        Model portfolio risk using Cholesky decomposition to capture correlation structure across assets.
-    </p>
+<!-- Hero Card -->
+<div class="card border-l-4 border-indigo-500">
+    <div class="flex items-start gap-4">
+        <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
+            📈
+        </div>
+        <div class="flex-1">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Portfolio Value at Risk (VaR)</h2>
+            <p class="text-gray-600 leading-relaxed">
+                Calculate <strong>Portfolio Value at Risk</strong> and <strong>Conditional VaR</strong> for multi-asset portfolios using 
+                Monte Carlo simulation with correlated returns. Based on Cholesky decomposition methodology for capturing 
+                correlation structure across assets and portfolio diversification effects.
+            </p>
+        </div>
+    </div>
+</div>
 
-    <div class="grid md:grid-cols-2 gap-6">
-        <div>
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">Portfolio Configuration</h3>
+<div class="grid lg:grid-cols-2 gap-6">
+    <!-- Parameters Panel -->
+    <div class="space-y-6">
+        <!-- Portfolio Configuration -->
+        <div class="card">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900">Portfolio Configuration</h3>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Portfolio Value <span class="text-gray-400 font-normal">$</span>
+                    </label>
+                    <input type="number" id="portfolioValue" value="1000000" step="10000" min="1000" 
+                           class="input-field" placeholder="1,000,000">
+                    <p class="text-xs text-gray-500 mt-1">Total portfolio size</p>
+                </div>
                 
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Portfolio Value ($)
-                        </label>
-                        <input type="number" id="portfolioValue" value="1000000" class="input-field">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Time Horizon (days)
-                        </label>
-                        <input type="number" id="days" value="10" class="input-field">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Confidence Level
-                        </label>
-                        <select id="confidence" class="input-field">
-                            <option value="0.95">95%</option>
-                            <option value="0.99" selected>99%</option>
-                            <option value="0.995">99.5%</option>
-                            <option value="0.999">99.9%</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Simulations
-                        </label>
-                        <input type="number" id="simulations" value="10000" class="input-field">
-                    </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Time Horizon <span class="text-gray-400 font-normal">days</span>
+                    </label>
+                    <input type="number" id="days" value="10" step="1" min="1" max="365"
+                           class="input-field" placeholder="10">
+                    <p class="text-xs text-gray-500 mt-1">Holding period</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Confidence Level <span class="text-gray-400 font-normal">%</span>
+                    </label>
+                    <select id="confidence" class="input-field">
+                        <option value="0.95">95%</option>
+                        <option value="0.99" selected>99%</option>
+                        <option value="0.995">99.5%</option>
+                        <option value="0.999">99.9%</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Risk tolerance</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Simulations <span class="text-gray-400 font-normal">#</span>
+                    </label>
+                    <input type="number" id="simulations" value="10000" step="1000" min="1000" max="1000000"
+                           class="input-field" placeholder="10,000">
+                    <p class="text-xs text-gray-500 mt-1">Monte Carlo paths</p>
                 </div>
             </div>
 
+            <!-- Asset Management -->
             <div class="mb-6">
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-lg font-semibold text-gray-900">Asset Allocation</h3>
-                    <button type="button" onclick="addAsset()" class="btn-secondary text-sm px-3 py-1">
-                        + Add Asset
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-lg font-semibold text-gray-900">Asset Allocation</h4>
+                    <button type="button" onclick="addAsset()" 
+                            class="btn-secondary px-4 py-2 text-sm flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Add Asset
                     </button>
                 </div>
                 
-                <div id="assetsContainer" class="space-y-4 max-h-96 overflow-y-auto p-2">
+                <div id="assetsContainer" class="space-y-4 max-h-96 overflow-y-auto p-2 mb-4">
                     <!-- Asset 1 - Stock -->
-                    <div class="p-4 border rounded-lg bg-white shadow-sm">
+                    <div class="p-4 border-2 border-gray-200 rounded-xl bg-gradient-to-r from-blue-50 to-white">
                         <div class="flex justify-between items-center mb-3">
-                            <h4 class="font-medium text-gray-900">Asset 1: Equity Index</h4>
-                            <button type="button" onclick="removeAsset(this)" class="text-red-600 hover:text-red-800 text-sm font-medium">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center text-white text-sm font-bold">
+                                    1
+                                </div>
+                                <h5 class="font-medium text-gray-900">Equity Index</h5>
+                            </div>
+                            <button type="button" onclick="removeAsset(this)" 
+                                    class="text-red-600 hover:text-red-800 text-sm font-medium flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
                                 Remove
                             </button>
                         </div>
                         <div class="grid grid-cols-4 gap-3">
                             <div>
                                 <label class="block text-xs text-gray-600 mb-1 font-medium">Weight (%)</label>
-                                <input type="number" value="60" min="0" max="100" step="1" class="asset-weight input-field text-sm">
+                                <input type="number" value="60" min="0" max="100" step="1" 
+                                       class="asset-weight input-field text-sm">
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-600 mb-1 font-medium">Expected Return (%)</label>
-                                <input type="number" value="8.0" step="0.1" class="asset-return input-field text-sm">
+                                <label class="block text-xs text-gray-600 mb-1 font-medium">Return (%)</label>
+                                <input type="number" value="8.0" step="0.1" 
+                                       class="asset-return input-field text-sm">
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-600 mb-1 font-medium">Volatility (%)</label>
-                                <input type="number" value="20.0" step="0.1" class="asset-vol input-field text-sm">
+                                <input type="number" value="20.0" step="0.1" 
+                                       class="asset-vol input-field text-sm">
                             </div>
                             <div class="flex items-end">
                                 <div class="w-full bg-gray-200 rounded-full h-2">
@@ -87,25 +132,37 @@
                     </div>
                     
                     <!-- Asset 2 - Bond -->
-                    <div class="p-4 border rounded-lg bg-white shadow-sm">
+                    <div class="p-4 border-2 border-gray-200 rounded-xl bg-gradient-to-r from-green-50 to-white">
                         <div class="flex justify-between items-center mb-3">
-                            <h4 class="font-medium text-gray-900">Asset 2: Government Bonds</h4>
-                            <button type="button" onclick="removeAsset(this)" class="text-red-600 hover:text-red-800 text-sm font-medium">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 bg-green-500 rounded-lg flex items-center justify-center text-white text-sm font-bold">
+                                    2
+                                </div>
+                                <h5 class="font-medium text-gray-900">Government Bonds</h5>
+                            </div>
+                            <button type="button" onclick="removeAsset(this)" 
+                                    class="text-red-600 hover:text-red-800 text-sm font-medium flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
                                 Remove
                             </button>
                         </div>
                         <div class="grid grid-cols-4 gap-3">
                             <div>
                                 <label class="block text-xs text-gray-600 mb-1 font-medium">Weight (%)</label>
-                                <input type="number" value="40" min="0" max="100" step="1" class="asset-weight input-field text-sm">
+                                <input type="number" value="40" min="0" max="100" step="1" 
+                                       class="asset-weight input-field text-sm">
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-600 mb-1 font-medium">Expected Return (%)</label>
-                                <input type="number" value="3.0" step="0.1" class="asset-return input-field text-sm">
+                                <label class="block text-xs text-gray-600 mb-1 font-medium">Return (%)</label>
+                                <input type="number" value="3.0" step="0.1" 
+                                       class="asset-return input-field text-sm">
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-600 mb-1 font-medium">Volatility (%)</label>
-                                <input type="number" value="5.0" step="0.1" class="asset-vol input-field text-sm">
+                                <input type="number" value="5.0" step="0.1" 
+                                       class="asset-vol input-field text-sm">
                             </div>
                             <div class="flex items-end">
                                 <div class="w-full bg-gray-200 rounded-full h-2">
@@ -116,125 +173,363 @@
                     </div>
                 </div>
                 
-                <div class="mt-3 p-3 bg-gray-50 rounded-lg">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">Total Allocation:</span>
-                        <span id="totalAllocation" class="font-semibold">100%</span>
+                <!-- Total Allocation Indicator -->
+                <div class="p-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border-2 border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="text-sm font-medium text-gray-700">Total Allocation:</span>
+                            <span id="totalAllocation" class="ml-2 text-lg font-bold text-green-600">100%</span>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            <span id="diversificationHint" class="hidden">
+                                <span class="font-medium text-green-600">✓ Diversification Benefit:</span>
+                                <span id="diversificationBenefit" class="ml-1"></span>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Correlation Matrix -->
             <div class="mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">Correlation Matrix</h3>
-                <div id="correlationMatrix" class="bg-white p-4 rounded-lg border">
+                <h4 class="text-lg font-semibold text-gray-900 mb-3">Correlation Matrix</h4>
+                <div id="correlationMatrix" class="bg-gradient-to-br from-gray-50 to-white p-4 rounded-xl border-2 border-gray-200">
                     <div class="text-sm text-gray-600 text-center p-4">
                         Correlation matrix will be generated based on the number of assets
                     </div>
                 </div>
                 <p class="text-xs text-gray-500 mt-2">
-                    Correlation coefficients range from -1 (perfect negative) to +1 (perfect positive)
+                    Adjust correlations from -1.0 (perfect negative) to +1.0 (perfect positive)
                 </p>
-            </div>
-
-            <button onclick="calculatePortfolioVaR()" class="btn-primary w-full mb-4" id="calculateBtn">
-                Calculate Portfolio VaR
-            </button>
-
-            <div class="loading hidden" id="loading">
-                <div class="spinner"></div>
-                <p class="mt-2 text-gray-600">Running portfolio simulations...</p>
             </div>
         </div>
 
-        <div>
-            <div id="results" class="bg-indigo-50 p-6 rounded-lg mb-6 border border-indigo-200 hidden">
-                <h3 class="text-xl font-bold text-indigo-800 mb-4">Portfolio Risk Analysis</h3>
-                
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div class="text-center p-4 bg-white rounded-lg border-2 border-red-200 shadow-sm">
-                        <div class="text-sm text-gray-600 font-medium mb-1">Portfolio VaR</div>
-                        <div class="text-2xl font-bold text-red-600" id="varValue">-</div>
-                        <div class="text-xs text-gray-500 mt-1" id="varConfidence"></div>
-                    </div>
-                    <div class="text-center p-4 bg-white rounded-lg border-2 border-orange-200 shadow-sm">
-                        <div class="text-sm text-gray-600 font-medium mb-1">Conditional VaR</div>
-                        <div class="text-2xl font-bold text-orange-600" id="cvarValue">-</div>
-                        <div class="text-xs text-gray-500 mt-1">Expected Shortfall</div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div class="text-center p-3 bg-white rounded-lg border">
-                        <div class="text-sm text-gray-600">Expected Return</div>
-                        <div class="text-lg font-bold text-blue-600" id="expectedReturn">-</div>
-                        <div class="text-xs text-gray-500">Annualized</div>
-                    </div>
-                    <div class="text-center p-3 bg-white rounded-lg border">
-                        <div class="text-sm text-gray-600">Portfolio Volatility</div>
-                        <div class="text-lg font-bold text-purple-600" id="portfolioVolatility">-</div>
-                        <div class="text-xs text-gray-500">Annualized</div>
-                    </div>
+        <!-- Portfolio Insights Card -->
+        <div class="card bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200">
+            <h3 class="text-lg font-bold text-blue-900 mb-3">📊 Portfolio Insights</h3>
+            
+            <div class="space-y-3">
+                <div class="bg-white rounded-lg p-3">
+                    <p class="font-semibold text-sm text-gray-900 mb-1">Diversification Effect</p>
+                    <p class="text-xs text-gray-700">
+                        Portfolio VaR is typically <strong class="text-green-600">lower</strong> than the sum of individual VaRs 
+                        due to correlation benefits.
+                    </p>
                 </div>
                 
-                <div class="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <div class="text-sm text-yellow-800 font-medium">Risk-Adjusted Performance</div>
-                    <div class="text-lg font-bold text-yellow-700" id="sharpeRatio">-</div>
-                    <div class="text-xs text-yellow-600 mt-1">Sharpe Ratio (assuming 2% risk-free rate)</div>
+                <div class="bg-white rounded-lg p-3">
+                    <p class="font-semibold text-sm text-gray-900 mb-1">Correlation Impact</p>
+                    <p class="text-xs text-gray-700">
+                        Lower correlations (< 0) reduce portfolio risk. Higher correlations (> 0.5) 
+                        increase portfolio risk concentration.
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-3">
+                    <p class="font-semibold text-sm text-gray-900 mb-1">Component VaR</p>
+                    <p class="text-xs text-gray-700">
+                        Shows each asset's contribution to total portfolio VaR, considering 
+                        both weight and correlation effects.
+                    </p>
                 </div>
             </div>
+        </div>
 
-            <div class="mb-6">
-                <div id="returnDistribution" style="width: 100%; height: 300px;"></div>
-            </div>
+        <!-- Action Buttons -->
+        <div class="space-y-3">
+            <button onclick="calculatePortfolioVaR()" id="calculateBtn" 
+                    class="btn-primary w-full text-lg py-4 flex items-center justify-center gap-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                Calculate Portfolio VaR
+            </button>
+            
+            <button onclick="optimizePortfolio()" id="optimizeBtn"
+                    class="btn-secondary w-full py-3 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Optimize Portfolio Allocation
+            </button>
+        </div>
 
-            <div>
-                <div id="varDecomposition" style="width: 100%; height: 250px;"></div>
+        <!-- Loading Indicator -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p class="mt-4 text-gray-600 font-medium">Calculating Portfolio Risk...</p>
+            <p class="text-sm text-gray-500 mt-2">Running Monte Carlo simulation with correlations</p>
+        </div>
+
+        <!-- Results Panel -->
+        <div id="results" class="card bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 hidden">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Portfolio Risk Analysis</h3>
+                <span class="info-badge success-badge">
+                    ✓ Calculated
+                </span>
             </div>
+            
+            <!-- VaR Results -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-red-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-xs text-gray-600 font-medium">Portfolio VaR</div>
+                        <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">VaR</span>
+                    </div>
+                    <div class="text-2xl font-bold text-red-600" id="varValue">-</div>
+                    <div class="text-xs text-gray-500 mt-1" id="varConfidence">-</div>
+                </div>
+                
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-orange-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-xs text-gray-600 font-medium">Conditional VaR</div>
+                        <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">CVaR</span>
+                    </div>
+                    <div class="text-2xl font-bold text-orange-600" id="cvarValue">-</div>
+                    <div class="text-xs text-gray-500 mt-1">Expected Shortfall</div>
+                </div>
+            </div>
+            
+            <!-- Portfolio Statistics -->
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <div class="bg-white rounded-lg p-3 text-center border border-blue-100">
+                    <div class="text-xs text-gray-600 font-medium mb-1">Expected Return</div>
+                    <div class="text-lg font-bold text-blue-600" id="expectedReturn">-</div>
+                    <div class="text-xs text-gray-500">Annualized</div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-3 text-center border border-purple-100">
+                    <div class="text-xs text-gray-600 font-medium mb-1">Portfolio Volatility</div>
+                    <div class="text-lg font-bold text-purple-600" id="portfolioVolatility">-</div>
+                    <div class="text-xs text-gray-500">Annualized</div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-3 text-center border border-green-100">
+                    <div class="text-xs text-gray-600 font-medium mb-1">Sharpe Ratio</div>
+                    <div class="text-lg font-bold text-green-600" id="sharpeRatio">-</div>
+                    <div class="text-xs text-gray-500">Risk-adjusted</div>
+                </div>
+            </div>
+            
+            <!-- Diversification Benefit -->
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="text-sm font-medium text-green-800">Diversification Benefit</div>
+                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
+                        Risk Reduction
+                    </span>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <div class="text-2xl font-bold text-green-700" id="diversificationPercent">-</div>
+                    <div class="text-sm text-green-600">less than sum of individual VaRs</div>
+                </div>
+                <div class="text-xs text-green-600 mt-1" id="diversificationAmount">-</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visualization Panel -->
+    <div class="space-y-6">
+        <!-- Return Distribution -->
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Portfolio Return Distribution</h3>
+                <span class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
+                    Monte Carlo Simulation
+                </span>
+            </div>
+            <div id="returnDistribution" style="width: 100%; height: 300px;"></div>
+        </div>
+
+        <!-- VaR Component Breakdown -->
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">VaR Component Breakdown</h3>
+                <span class="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-medium">
+                    Risk Contribution
+                </span>
+            </div>
+            <div id="varDecomposition" style="width: 100%; height: 250px;"></div>
+        </div>
+
+        <!-- Correlation Matrix Visualization -->
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Correlation Heatmap</h3>
+                <span class="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-medium">
+                    Relationship Strength
+                </span>
+            </div>
+            <div id="correlationHeatmap" style="width: 100%; height: 250px;"></div>
         </div>
     </div>
 </div>
 
-<!-- Rest of your informational cards remain the same -->
-<div class="grid md:grid-cols-2 gap-6 mb-6">
-    <div class="card bg-blue-50 border-l-4 border-blue-500">
-        <h3 class="text-xl font-bold text-blue-900 mb-3">Methodology: Cholesky Decomposition</h3>
+<!-- Theory Section -->
+<div class="grid lg:grid-cols-2 gap-6 mt-6">
+    <div class="card bg-gradient-to-br from-indigo-50 to-blue-50 border-2 border-indigo-200">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center text-white font-bold">
+                📐
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">Portfolio VaR Methodology</h3>
+        </div>
         
         <div class="space-y-4">
-            <div>
-                <p class="font-semibold text-blue-800 mb-2">Correlated Random Variables</p>
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Cholesky Decomposition</p>
                 <p class="text-sm text-gray-700 mb-2">
-                    Generate correlated asset returns from independent standard normals:
+                    Generate correlated returns from independent standard normals:
                 </p>
-                <div class="font-mono text-xs bg-blue-100 p-3 rounded border">
-                    L * Lᵀ = Σ (covariance matrix)<br>
-                    correlated_returns = L * z (where z ~ N(0,I))
-                </div>
+                <code class="text-sm bg-gray-100 px-3 py-2 rounded block">Σ = L * Lᵀ (Cholesky factorization)</code>
+                <code class="text-sm bg-gray-100 px-3 py-2 rounded block mt-1">correlated_returns = L * z (where z ~ N(0,I))</code>
+                <p class="text-xs text-gray-500 mt-2">
+                    Σ is the covariance matrix, L is lower triangular matrix
+                </p>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Portfolio Statistics</p>
+                <ul class="text-sm text-gray-700 space-y-2">
+                    <li class="flex items-start">
+                        <span class="inline-block w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs flex items-center justify-center mr-2">1</span>
+                        <div><strong>Expected Return:</strong> μₚ = ∑ wᵢ μᵢ</div>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="inline-block w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs flex items-center justify-center mr-2">2</span>
+                        <div><strong>Variance:</strong> σₚ² = ∑∑ wᵢ wⱼ σᵢ σⱼ ρᵢⱼ</div>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="inline-block w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs flex items-center justify-center mr-2">3</span>
+                        <div><strong>Sharpe Ratio:</strong> (μₚ - r) / σₚ</div>
+                    </li>
+                </ul>
             </div>
 
-            <div>
-                <p class="font-semibold text-blue-800 mb-2">Portfolio Statistics</p>
-                <ul class="text-sm text-gray-700 list-disc ml-5 space-y-1">
-                    <li><strong>Expected Return:</strong> μₚ = ∑ wᵢ μᵢ</li>
-                    <li><strong>Variance:</strong> σₚ² = ∑∑ wᵢ wⱼ σᵢ σⱼ ρᵢⱼ</li>
-                    <li><strong>Sharpe Ratio:</strong> (μₚ - r) / σₚ</li>
-                </ul>
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Component VaR</p>
+                <p class="text-sm text-gray-700 mb-2">
+                    Contribution of each asset to total portfolio VaR:
+                </p>
+                <code class="text-xs bg-gray-100 px-2 py-1 rounded block">Component VaRᵢ = (∂VaR/∂wᵢ) × wᵢ</code>
+                <p class="text-xs text-gray-500 mt-2">
+                    Measures marginal contribution considering correlations
+                </p>
             </div>
         </div>
     </div>
 
-    <div class="card bg-green-50 border-l-4 border-green-500">
-        <h3 class="text-xl font-bold text-green-900 mb-3">Diversification Benefits</h3>
+    <div class="card bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center text-white font-bold">
+                🎯
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">Diversification & Optimization</h3>
+        </div>
         
         <div class="space-y-4">
-            <div>
-                <p class="font-semibold text-green-800 mb-2">Correlation Impact</p>
-                <ul class="text-sm text-gray-700 list-disc ml-5">
-                    <li><strong>ρ = 1.0:</strong> No diversification benefit</li>
-                    <li><strong>ρ = 0.0:</strong> Moderate diversification</li>
-                    <li><strong>ρ = -1.0:</strong> Perfect hedging possible</li>
-                    <li><strong>Typical stock-bond:</strong> ρ ≈ -0.2 to 0.3</li>
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Correlation Impact</p>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-700">Perfect Positive (ρ = 1.0)</span>
+                        <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">No diversification</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-700">Zero Correlation (ρ = 0.0)</span>
+                        <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">Moderate benefit</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-700">Perfect Negative (ρ = -1.0)</span>
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Perfect hedging</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Diversification Benefit</p>
+                
+                <div class="mb-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
+                    <div class="text-sm text-green-800 font-medium">Portfolio VaR Reduction</div>
+                    <code class="text-xs bg-white px-2 py-1 rounded block mt-1">Diversification = (1 - VaR_portfolio / Σ VaR_individual) × 100%</code>
+                </div>
+                
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>• Reduces portfolio risk without sacrificing return</li>
+                    <li>• Most effective with low/negative correlations</li>
+                    <li>• Provides "free lunch" in modern portfolio theory</li>
+                    <li>• Critical for institutional portfolios</li>
                 </ul>
             </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Efficient Frontier</p>
+                <div class="grid grid-cols-3 gap-2 text-xs">
+                    <div class="text-center p-2 bg-blue-50 rounded">
+                        <div class="text-lg mb-1">⚖️</div>
+                        <div class="font-semibold">Risk</div>
+                        <div class="text-gray-600">Minimization</div>
+                    </div>
+                    <div class="text-center p-2 bg-blue-50 rounded">
+                        <div class="text-lg mb-1">📈</div>
+                        <div class="font-semibold">Return</div>
+                        <div class="text-gray-600">Maximization</div>
+                    </div>
+                    <div class="text-center p-2 bg-blue-50 rounded">
+                        <div class="text-lg mb-1">🎯</div>
+                        <div class="font-semibold">Sharpe</div>
+                        <div class="text-gray-600">Optimization</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4 p-3 bg-purple-100 rounded-lg">
+            <p class="text-xs text-purple-800">
+                <strong>Key Insight:</strong> Diversification benefits increase as correlations decrease. 
+                A well-diversified portfolio can achieve the same return with lower risk.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Concepts Section -->
+<div class="card mt-6 bg-gradient-to-br from-gray-50 to-slate-50 border-2 border-gray-200">
+    <h3 class="text-xl font-bold text-gray-900 mb-4">📖 Portfolio Risk Management Applications</h3>
+    
+    <div class="grid md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-xl p-4">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 text-xl mb-3">
+                🏛️
+            </div>
+            <h4 class="font-semibold text-gray-900 mb-2">Regulatory Compliance</h4>
+            <p class="text-sm text-gray-700">
+                Basel III requires banks to calculate portfolio VaR for market risk capital. 
+                Internal models must account for correlation effects.
+            </p>
+        </div>
+        
+        <div class="bg-white rounded-xl p-4">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 text-xl mb-3">
+                ⚖️
+            </div>
+            <h4 class="font-semibold text-gray-900 mb-2">Portfolio Optimization</h4>
+            <p class="text-sm text-gray-700">
+                Identify optimal asset allocations that minimize VaR for a given return target, 
+                or maximize return for a given risk tolerance.
+            </p>
+        </div>
+        
+        <div class="bg-white rounded-xl p-4">
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 text-xl mb-3">
+                🛡️
+            </div>
+            <h4 class="font-semibold text-gray-900 mb-2">Risk Budgeting</h4>
+            <p class="text-sm text-gray-700">
+                Allocate risk budgets across assets based on Component VaR contributions. 
+                Ensures risk-taking aligns with investment views.
+            </p>
         </div>
     </div>
 </div>
@@ -243,8 +538,10 @@
 {% block extra_js %}
 <script>
 let assetCount = 2;
-const assetNames = ['Equity Index', 'Government Bonds', 'Corporate Bonds', 'Real Estate', 'Commodities', 'Cash', 'Emerging Markets', 'High Yield Bonds'];
+const assetNames = ['Equity Index', 'Government Bonds', 'Corporate Bonds', 'Real Estate', 
+                    'Commodities', 'Cash', 'Emerging Markets', 'High Yield Bonds'];
 const assetColors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#6b7280', '#ec4899', '#84cc16'];
+const assetIcons = ['📈', '🏛️', '💼', '🏠', '🛢️', '💵', '🌍', '⚡'];
 
 function addAsset() {
     if (assetCount >= 8) {
@@ -253,29 +550,44 @@ function addAsset() {
     }
     
     assetCount++;
-    const assetName = assetNames[assetCount - 1] || `Asset ${assetCount}`;
-    const color = assetColors[assetCount - 1] || '#6b7280';
+    const assetIndex = assetCount - 1;
+    const assetName = assetNames[assetIndex] || `Asset ${assetCount}`;
+    const color = assetColors[assetIndex] || '#6b7280';
+    const icon = assetIcons[assetIndex] || '📊';
     
     const newAsset = `
-        <div class="p-4 border rounded-lg bg-white shadow-sm">
+        <div class="p-4 border-2 border-gray-200 rounded-xl bg-gradient-to-r from-gray-50 to-white">
             <div class="flex justify-between items-center mb-3">
-                <h4 class="font-medium text-gray-900">Asset ${assetCount}: ${assetName}</h4>
-                <button type="button" onclick="removeAsset(this)" class="text-red-600 hover:text-red-800 text-sm font-medium">
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 text-white rounded-lg flex items-center justify-center text-sm font-bold" 
+                         style="background-color: ${color}">
+                        ${assetCount}
+                    </div>
+                    <h5 class="font-medium text-gray-900">${assetName} ${icon}</h5>
+                </div>
+                <button type="button" onclick="removeAsset(this)" 
+                        class="text-red-600 hover:text-red-800 text-sm font-medium flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
                     Remove
                 </button>
             </div>
             <div class="grid grid-cols-4 gap-3">
                 <div>
                     <label class="block text-xs text-gray-600 mb-1 font-medium">Weight (%)</label>
-                    <input type="number" value="0" min="0" max="100" step="1" class="asset-weight input-field text-sm">
+                    <input type="number" value="0" min="0" max="100" step="1" 
+                           class="asset-weight input-field text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-600 mb-1 font-medium">Expected Return (%)</label>
-                    <input type="number" value="5.0" step="0.1" class="asset-return input-field text-sm">
+                    <label class="block text-xs text-gray-600 mb-1 font-medium">Return (%)</label>
+                    <input type="number" value="5.0" step="0.1" 
+                           class="asset-return input-field text-sm">
                 </div>
                 <div>
                     <label class="block text-xs text-gray-600 mb-1 font-medium">Volatility (%)</label>
-                    <input type="number" value="15.0" step="0.1" class="asset-vol input-field text-sm">
+                    <input type="number" value="15.0" step="0.1" 
+                           class="asset-vol input-field text-sm">
                 </div>
                 <div class="flex items-end">
                     <div class="w-full bg-gray-200 rounded-full h-2">
@@ -292,16 +604,18 @@ function addAsset() {
 
 function removeAsset(button) {
     if (assetCount > 1) {
-        button.closest('.bg-white').remove();
+        button.closest('.bg-gradient-to-r').remove();
         assetCount--;
         updateCorrelationMatrix();
         updateAllocationBars();
+    } else {
+        showError('Portfolio must contain at least one asset');
     }
 }
 
 function updateAllocationBars() {
     const weights = Array.from(document.getElementsByClassName('asset-weight')).map(el => parseFloat(el.value) || 0);
-    const bars = document.querySelectorAll('.bg-white .h-2.rounded-full');
+    const bars = document.querySelectorAll('.bg-gradient-to-r .h-2.rounded-full');
     
     bars.forEach((bar, index) => {
         if (weights[index] !== undefined) {
@@ -310,8 +624,15 @@ function updateAllocationBars() {
     });
     
     const total = weights.reduce((sum, w) => sum + w, 0);
-    document.getElementById('totalAllocation').textContent = `${total}%`;
-    document.getElementById('totalAllocation').className = total === 100 ? 'font-semibold text-green-600' : 'font-semibold text-red-600';
+    const totalElement = document.getElementById('totalAllocation');
+    totalElement.textContent = `${total}%`;
+    totalElement.className = total === 100 ? 'ml-2 text-lg font-bold text-green-600' : 'ml-2 text-lg font-bold text-red-600';
+    
+    // Update diversification hint
+    const hintElement = document.getElementById('diversificationHint');
+    if (total !== 100) {
+        hintElement.classList.add('hidden');
+    }
 }
 
 function updateCorrelationMatrix() {
@@ -323,21 +644,23 @@ function updateCorrelationMatrix() {
         return;
     }
     
-    let html = '<div class="text-xs mb-3 text-gray-600 font-medium">Correlation Matrix (values from -1.0 to 1.0)</div>';
+    let html = '<div class="text-xs mb-3 text-gray-600 font-medium">Adjust correlations between assets:</div>';
     html += '<div class="grid gap-1 text-xs" style="grid-template-columns: repeat(' + (n + 1) + ', 1fr);">';
     
     // Header row
-    html += '<div class="text-center font-medium p-2 bg-gray-100 rounded"></div>';
+    html += '<div class="text-center font-medium p-2 bg-gradient-to-b from-gray-100 to-gray-50 rounded-lg"></div>';
     for (let i = 1; i <= n; i++) {
-        html += `<div class="text-center font-medium p-2 bg-gray-100 rounded">${i}</div>`;
+        html += `<div class="text-center font-medium p-2 bg-gradient-to-b from-gray-100 to-gray-50 rounded-lg">${i}</div>`;
     }
     
     // Matrix rows
     for (let i = 1; i <= n; i++) {
-        html += `<div class="text-center font-medium p-2 bg-gray-100 rounded">${i}</div>`;
+        html += `<div class="text-center font-medium p-2 bg-gradient-to-b from-gray-100 to-gray-50 rounded-lg">${i}</div>`;
         for (let j = 1; j <= n; j++) {
             if (i === j) {
-                html += '<div class="text-center bg-blue-50 p-2 font-medium text-blue-700 rounded">1.0</div>';
+                html += `<div class="text-center bg-gradient-to-b from-blue-50 to-blue-100 p-2 font-medium text-blue-700 rounded-lg border border-blue-200">
+                           1.0
+                         </div>`;
             } else if (i < j) {
                 // Set reasonable default correlations
                 let defaultCorr = 0.3;
@@ -345,10 +668,10 @@ function updateCorrelationMatrix() {
                 if (i === 1 && j === 3) defaultCorr = 0.6; // Stock-Corporate Bond
                 
                 html += `<input type="number" value="${defaultCorr}" min="-1" max="1" step="0.1" 
-                         class="correlation-input input-field text-center p-1 text-xs" 
+                         class="correlation-input input-field text-center p-1 text-xs border-2 hover:border-indigo-300" 
                          data-i="${i-1}" data-j="${j-1}">`;
             } else {
-                html += '<div class="text-center bg-gray-50 p-2 text-gray-400 rounded">-</div>';
+                html += '<div class="text-center bg-gradient-to-b from-gray-50 to-gray-100 p-2 text-gray-400 rounded-lg">-</div>';
             }
         }
     }
@@ -362,7 +685,29 @@ function updateCorrelationMatrix() {
             const value = parseFloat(this.value);
             if (value < -1) this.value = -1;
             if (value > 1) this.value = 1;
+            
+            // Update visual feedback
+            if (value < 0) {
+                this.classList.add('border-red-300', 'bg-red-50');
+                this.classList.remove('border-indigo-300', 'bg-blue-50');
+            } else if (value > 0.5) {
+                this.classList.add('border-orange-300', 'bg-orange-50');
+                this.classList.remove('border-indigo-300', 'bg-blue-50');
+            } else {
+                this.classList.remove('border-red-300', 'bg-red-50', 'border-orange-300', 'bg-orange-50');
+                this.classList.add('border-indigo-300', 'bg-blue-50');
+            }
         });
+        
+        // Initial styling
+        const initialValue = parseFloat(input.value);
+        if (initialValue < 0) {
+            input.classList.add('border-red-300', 'bg-red-50');
+        } else if (initialValue > 0.5) {
+            input.classList.add('border-orange-300', 'bg-orange-50');
+        } else {
+            input.classList.add('border-indigo-300', 'bg-blue-50');
+        }
     });
 }
 
@@ -414,6 +759,18 @@ async function calculatePortfolioVaR() {
         correlations[i][i] = 1;
     }
     
+    // Check if correlation matrix is positive definite (simplified check)
+    let sumOffDiagonal = 0;
+    for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+            sumOffDiagonal += Math.abs(correlations[i][j]);
+        }
+    }
+    if (sumOffDiagonal > n * (n - 1) / 2) {
+        showError('Correlation matrix may not be valid. Please reduce correlation values.');
+        return;
+    }
+    
     // Prepare asset parameters (convert percentages to decimals)
     const assetParams = returns.map((ret, i) => [ret / 100, vols[i] / 100]);
     
@@ -447,7 +804,7 @@ async function calculatePortfolioVaR() {
             throw new Error(data.error || 'Calculation failed');
         }
         
-        // Update results - ensure positive values
+        // Update results
         document.getElementById('varValue').textContent = formatCurrency(Math.abs(data.var));
         document.getElementById('cvarValue').textContent = formatCurrency(Math.abs(data.cvar));
         document.getElementById('varConfidence').textContent = (params.confidence * 100) + '% Confidence Level';
@@ -455,11 +812,27 @@ async function calculatePortfolioVaR() {
         document.getElementById('portfolioVolatility').textContent = (data.volatility_annual * 100).toFixed(2) + '%';
         document.getElementById('sharpeRatio').textContent = data.sharpe_ratio.toFixed(3);
         
+        // Update diversification benefit
+        if (data.diversification_benefit) {
+            document.getElementById('diversificationPercent').textContent = data.diversification_benefit.percent.toFixed(1) + '%';
+            document.getElementById('diversificationAmount').textContent = 
+                `Portfolio VaR is $${formatCurrency(data.diversification_benefit.amount)} lower than sum of individual VaRs`;
+        }
+        
         showElement('results');
         
         // Create visualizations
         createReturnDistribution(data.portfolio_returns);
         createVaRDecomposition(data.component_var);
+        createCorrelationHeatmap(correlations);
+        
+        // Show diversification hint
+        const hintElement = document.getElementById('diversificationHint');
+        hintElement.classList.remove('hidden');
+        if (data.diversification_benefit) {
+            document.getElementById('diversificationBenefit').textContent = 
+                data.diversification_benefit.percent.toFixed(1) + '% risk reduction';
+        }
         
     } catch (error) {
         showError('Calculation failed: ' + error.message);
@@ -468,6 +841,11 @@ async function calculatePortfolioVaR() {
         hideLoading('loading');
         calculateBtn.disabled = false;
     }
+}
+
+function optimizePortfolio() {
+    showError('Portfolio optimization feature coming soon!');
+    // This would implement Markowitz optimization or risk parity
 }
 
 function formatCurrency(amount) {
@@ -488,28 +866,39 @@ function createReturnDistribution(returns) {
         x: returnsPercent,
         type: 'histogram',
         name: 'Portfolio Returns',
-        marker: { color: '#4f46e5' },
+        marker: { 
+            color: '#4f46e5',
+            line: { color: '#3730a3', width: 1 }
+        },
         opacity: 0.7,
         nbinsx: 50
     };
     
     const layout = {
-        title: 'Portfolio Return Distribution (10-day period)',
+        title: {
+            text: 'Portfolio Return Distribution (10-day period)',
+            font: { size: 14, weight: 'bold' }
+        },
         xaxis: { 
             title: 'Portfolio Return (%)',
-            tickformat: '.1f'
+            tickformat: '.1f',
+            gridcolor: '#f3f4f6'
         },
-        yaxis: { title: 'Frequency' },
+        yaxis: { 
+            title: 'Frequency',
+            gridcolor: '#f3f4f6'
+        },
         showlegend: false,
-        plot_bgcolor: '#f8fafc',
-        paper_bgcolor: '#f8fafc'
+        plot_bgcolor: '#fafafa',
+        paper_bgcolor: 'white',
+        margin: { l: 60, r: 30, t: 50, b: 50 }
     };
     
     Plotly.newPlot('returnDistribution', [trace], layout);
 }
 
 function createVaRDecomposition(componentVar) {
-    const labels = componentVar.map(comp => `Asset ${comp.asset}`);
+    const labels = componentVar.map((comp, index) => `${index + 1}: ${assetNames[index] || `Asset ${index + 1}`}`);
     const values = componentVar.map(comp => Math.abs(comp.component_var));
     
     const trace = {
@@ -519,22 +908,71 @@ function createVaRDecomposition(componentVar) {
         marker: {
             colors: assetColors.slice(0, componentVar.length)
         },
-        textinfo: 'label+value',
-        texttemplate: '%{label}<br>$%{value:,.0f}',
-        hovertemplate: '%{label}<br>Component VaR: $%{value:,.2f}<br>%{percent}<extra></extra>'
+        textinfo: 'label+percent',
+        texttemplate: '%{label}<br>%{percent}',
+        hovertemplate: '%{label}<br>Component VaR: $%{value:,.2f}<br>%{percent}<extra></extra>',
+        hole: 0.4,
+        sort: false
     };
     
     const layout = {
-        title: 'Component VaR Contribution',
+        title: {
+            text: 'VaR Contribution by Asset',
+            font: { size: 14, weight: 'bold' }
+        },
         showlegend: false,
         annotations: [{
             text: 'VaR<br>Breakdown',
             showarrow: false,
-            font: { size: 14 }
-        }]
+            font: { size: 14 },
+            x: 0.5,
+            y: 0.5
+        }],
+        plot_bgcolor: '#fafafa',
+        paper_bgcolor: 'white'
     };
     
     Plotly.newPlot('varDecomposition', [trace], layout);
+}
+
+function createCorrelationHeatmap(correlations) {
+    const assetLabels = correlations.map((_, i) => `${i + 1}: ${assetNames[i] || `Asset ${i + 1}`}`);
+    
+    const trace = {
+        z: correlations,
+        x: assetLabels,
+        y: assetLabels,
+        type: 'heatmap',
+        colorscale: [
+            [0, '#ef4444'],    // Red for negative
+            [0.5, '#f3f4f6'],  // White for zero
+            [1, '#3b82f6']     // Blue for positive
+        ],
+        zmin: -1,
+        zmax: 1,
+        text: correlations.map(row => row.map(val => val.toFixed(2))),
+        texttemplate: '%{text}',
+        textfont: { size: 10, color: 'white' },
+        hoverongaps: false
+    };
+    
+    const layout = {
+        title: {
+            text: 'Asset Correlation Matrix',
+            font: { size: 14, weight: 'bold' }
+        },
+        xaxis: {
+            tickangle: -45
+        },
+        yaxis: {
+            autorange: 'reversed'
+        },
+        plot_bgcolor: '#fafafa',
+        paper_bgcolor: 'white',
+        margin: { l: 100, r: 30, t: 50, b: 100 }
+    };
+    
+    Plotly.newPlot('correlationHeatmap', [trace], layout);
 }
 
 // Utility functions
@@ -561,12 +999,17 @@ function showError(message) {
     
     // Create error notification
     const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-notification fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg z-50 max-w-md';
+    errorDiv.className = 'error-notification fixed top-4 right-4 bg-red-100 border-2 border-red-400 text-red-700 px-4 py-3 rounded-xl shadow-lg z-50 max-w-md';
     errorDiv.innerHTML = `
         <div class="flex justify-between items-start">
-            <div class="flex-1">
-                <strong class="font-bold">Calculation Error!</strong>
-                <span class="block mt-1 text-sm">${message}</span>
+            <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-sm">
+                    !
+                </div>
+                <div class="flex-1">
+                    <strong class="font-bold text-red-900">Calculation Error!</strong>
+                    <span class="block mt-1 text-sm">${message}</span>
+                </div>
             </div>
             <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-red-700 hover:text-red-900">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -596,6 +1039,9 @@ document.addEventListener('DOMContentLoaded', function() {
             updateAllocationBars();
         }
     });
+    
+    // Calculate on page load after a delay
+    setTimeout(calculatePortfolioVaR, 1000);
 });
 </script>
 
@@ -675,6 +1121,72 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .hidden {
     display: none !important;
+}
+
+.info-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.success-badge {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.3);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    color: #374151;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: 1px solid #d1d5db;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+    transform: translateY(-1px);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e5e7eb;
+    border-top: 4px solid #4f46e5;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 </style>
 {% endblock %}

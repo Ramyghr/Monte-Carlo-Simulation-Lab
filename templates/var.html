@@ -3,43 +3,77 @@
 {% block title %}Value at Risk - Monte Carlo Lab{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2 class="text-2xl font-bold text-indigo-900 mb-4">Value at Risk (VaR) Calculation</h2>
-    <p class="text-gray-700 mb-4">
-        Calculate Value at Risk and Conditional Value at Risk using Monte Carlo simulation. 
-        Based on the risk management framework from Chen and Hong (2008) and Glasserman et al. (2000).
-    </p>
+<!-- Hero Card -->
+<div class="card border-l-4 border-red-500">
+    <div class="flex items-start gap-4">
+        <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
+            📊
+        </div>
+        <div class="flex-1">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Value at Risk (VaR) Calculation</h2>
+            <p class="text-gray-600 leading-relaxed">
+                Calculate <strong>Value at Risk</strong> and <strong>Conditional Value at Risk</strong> using 
+                Monte Carlo simulation. Based on the risk management framework from Chen and Hong (2008) and 
+                Glasserman et al. (2000). VaR measures the maximum potential loss at a given confidence level.
+            </p>
+        </div>
+    </div>
+</div>
 
-    <div class="grid md:grid-cols-2 gap-6">
-        <div>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Portfolio Value ($)
-                    </label>
-                    <input type="number" id="portfolioValue" value="1000000" class="input-field">
+<div class="grid lg:grid-cols-2 gap-6">
+    <!-- Parameters Panel -->
+    <div class="space-y-6">
+        <!-- Risk Parameters -->
+        <div class="card">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
                 </div>
+                <h3 class="text-xl font-bold text-gray-900">Portfolio Parameters</h3>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Expected Return (μ)
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Portfolio Value <span class="text-gray-400 font-normal">$</span>
                     </label>
-                    <input type="number" id="mu" value="0.08" step="0.01" class="input-field">
+                    <input type="number" id="portfolioValue" value="1000000" step="10000" min="1000" 
+                           class="input-field" placeholder="1,000,000">
+                    <p class="text-xs text-gray-500 mt-1">Total portfolio size</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Volatility (σ)
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Expected Return (μ) <span class="text-gray-400 font-normal">annual</span>
                     </label>
-                    <input type="number" id="sigma" value="0.25" step="0.01" class="input-field">
+                    <input type="number" id="mu" value="0.08" step="0.01" min="-1" max="1"
+                           class="input-field" placeholder="0.08">
+                    <p class="text-xs text-gray-500 mt-1">Annual return rate</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Time Horizon (days)
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Volatility (σ) <span class="text-gray-400 font-normal">annual</span>
                     </label>
-                    <input type="number" id="days" value="10" class="input-field">
+                    <input type="number" id="sigma" value="0.25" step="0.01" min="0.01" max="2"
+                           class="input-field" placeholder="0.25">
+                    <p class="text-xs text-gray-500 mt-1">Annual volatility</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Confidence Level
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Time Horizon <span class="text-gray-400 font-normal">days</span>
+                    </label>
+                    <input type="number" id="days" value="10" step="1" min="1" max="365"
+                           class="input-field" placeholder="10">
+                    <p class="text-xs text-gray-500 mt-1">Holding period</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Confidence Level <span class="text-gray-400 font-normal">%</span>
                     </label>
                     <select id="confidence" class="input-field">
                         <option value="0.95">95%</option>
@@ -47,213 +81,246 @@
                         <option value="0.995">99.5%</option>
                         <option value="0.999">99.9%</option>
                     </select>
+                    <p class="text-xs text-gray-500 mt-1">Risk tolerance</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Simulations
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Simulations <span class="text-gray-400 font-normal">#</span>
                     </label>
-                    <input type="number" id="simulations" value="10000" class="input-field">
-                </div>
-            </div>
-
-            <button onclick="calculateVaR()" class="btn-primary w-full mb-4" id="calculateBtn">
-                Calculate VaR
-            </button>
-
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p class="mt-2 text-gray-600">Calculating risk measures...</p>
-            </div>
-
-            <div id="results" class="bg-indigo-50 p-4 rounded-lg space-y-3" style="display: none;">
-                <h3 class="font-bold text-lg text-indigo-800">Risk Measures</h3>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="text-center p-3 bg-white rounded-lg border-2 border-red-200">
-                        <div class="text-sm text-gray-600">Value at Risk (VaR)</div>
-                        <div class="text-xl font-bold text-red-600" id="varValue"></div>
-                        <div class="text-xs text-gray-500" id="varConfidence"></div>
-                    </div>
-                    <div class="text-center p-3 bg-white rounded-lg border-2 border-orange-200">
-                        <div class="text-sm text-gray-600">Conditional VaR</div>
-                        <div class="text-xl font-bold text-orange-600" id="cvarValue"></div>
-                        <div class="text-xs text-gray-500">Expected Shortfall</div>
-                    </div>
-                </div>
-                
-                <div class="text-center p-3 bg-yellow-50 rounded-lg">
-                    <div class="text-sm text-yellow-800">Portfolio Protection</div>
-                    <div class="text-lg font-bold text-yellow-700" id="protectionLevel"></div>
+                    <input type="number" id="simulations" value="10000" step="1000" min="1000" max="1000000"
+                           class="input-field" placeholder="10,000">
+                    <p class="text-xs text-gray-500 mt-1">Monte Carlo paths</p>
                 </div>
             </div>
         </div>
 
-        <div>
+        <!-- VaR Info Card -->
+        <div class="card bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200">
+            <h3 class="text-lg font-bold text-blue-900 mb-3">📖 VaR Interpretation</h3>
+            
+            <div class="space-y-3">
+                <div class="bg-white rounded-lg p-3">
+                    <p class="font-semibold text-sm text-gray-900 mb-1">99% VaR Example</p>
+                    <p class="text-xs text-gray-700">
+                        "We are 99% confident that we will not lose more than $X over the next N days."
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-3">
+                    <p class="font-semibold text-sm text-gray-900 mb-1">Conditional VaR (CVaR)</p>
+                    <p class="text-xs text-gray-700">
+                        Also known as Expected Shortfall. Average loss in the worst (1-α)% of cases.
+                        Provides better tail risk assessment than VaR alone.
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-3">
+                    <p class="font-semibold text-sm text-gray-900 mb-1">Regulatory Context</p>
+                    <p class="text-xs text-gray-700">
+                        Basel Accords require banks to calculate VaR for market risk capital requirements.
+                        Typically use 99% confidence over 10-day horizon.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-3">
+            <button onclick="calculateVaR()" id="calculateBtn" 
+                    class="btn-primary w-full text-lg py-4 flex items-center justify-center gap-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                Calculate VaR
+            </button>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p class="mt-4 text-gray-600 font-medium">Calculating risk measures...</p>
+            <p class="text-sm text-gray-500 mt-2">Running Monte Carlo simulation</p>
+        </div>
+
+        <!-- Results Panel -->
+        <div id="results" class="card bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200 hidden">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Risk Measures</h3>
+                <span class="info-badge success-badge">
+                    ✓ Calculated
+                </span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-red-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-xs text-gray-600 font-medium">Value at Risk</div>
+                        <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">VaR</span>
+                    </div>
+                    <div class="text-2xl font-bold text-red-600" id="varValue">-</div>
+                    <div class="text-xs text-gray-500 mt-1" id="varConfidence">-</div>
+                </div>
+                
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-orange-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-xs text-gray-600 font-medium">Conditional VaR</div>
+                        <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">CVaR</span>
+                    </div>
+                    <div class="text-2xl font-bold text-orange-600" id="cvarValue">-</div>
+                    <div class="text-xs text-gray-500 mt-1">Expected Shortfall</div>
+                </div>
+            </div>
+            
+            <div class="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-4 border-2 border-yellow-200">
+                <div class="text-sm text-yellow-800 font-medium mb-1">Portfolio Protection</div>
+                <div class="text-2xl font-bold text-yellow-700" id="protectionLevel">-</div>
+                <div class="text-xs text-yellow-600 mt-1">Capital preserved at confidence level</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visualization Panel -->
+    <div class="space-y-6">
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Loss Distribution</h3>
+                <span class="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-full font-medium">
+                    Tail Risk Analysis
+                </span>
+            </div>
             <div id="lossDistribution" style="width: 100%; height: 500px;"></div>
         </div>
     </div>
 </div>
 
-<div class="grid md:grid-cols-2 gap-6">
-    <div class="card bg-red-50">
-        <h3 class="text-xl font-bold text-red-900 mb-3">VaR Methodology</h3>
-        
-        <div class="mb-4">
-            <p class="font-semibold text-red-800 mb-2">Definition</p>
-            <p class="text-sm text-gray-700 mb-2">
-                Value at Risk (VaR) is the maximum loss not exceeded with a given probability 
-                over a given period of time.
-            </p>
-            <p class="font-mono text-sm bg-red-100 p-2 rounded">
-                P(L > VaR_α) = 1 - α
-            </p>
+<!-- Theory Section -->
+<div class="grid lg:grid-cols-2 gap-6 mt-6">
+    <div class="card bg-gradient-to-br from-red-50 to-pink-50">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center text-white font-bold">
+                📐
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">VaR Methodology</h3>
         </div>
-
-        <div class="mb-4">
-            <p class="font-semibold text-red-800 mb-2">Monte Carlo Simulation</p>
-            <ul class="text-sm text-gray-700 list-disc ml-5">
-                <li>Simulate portfolio returns using Geometric Brownian Motion</li>
-                <li>Calculate losses for each simulation</li>
-                <li>Sort losses and find α-quantile</li>
-                <li>Conditional VaR averages losses beyond VaR</li>
-            </ul>
-        </div>
-
-        <div class="p-3 bg-red-100 rounded">
-            <p class="text-sm text-red-800 font-semibold">Mathematical Foundation:</p>
-            <p class="text-xs text-red-700">
-                Portfolio value: V_T = V₀ exp((μ - σ²/2)Δt + σ√Δt·Z)<br>
-                Loss: L = V₀ - V_T
-            </p>
-        </div>
-    </div>
-
-    <div class="card bg-blue-50">
-        <h3 class="text-xl font-bold text-blue-900 mb-3">Risk Interpretation</h3>
         
         <div class="space-y-4">
-            <div>
-                <p class="font-semibold text-blue-800 mb-1">99% VaR Example</p>
-                <p class="text-sm text-gray-700">
-                    "We are 99% confident that we will not lose more than $X over the next N days."
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Mathematical Definition</p>
+                <p class="text-sm text-gray-700 mb-2">
+                    Value at Risk is the maximum loss not exceeded with probability α:
+                </p>
+                <code class="text-sm bg-gray-100 px-3 py-2 rounded block">P(L > VaR_α) = 1 - α</code>
+                <p class="text-xs text-gray-500 mt-2">
+                    Where L is the portfolio loss and α is the confidence level
                 </p>
             </div>
             
-            <div>
-                <p class="font-semibold text-blue-800 mb-1">Conditional VaR (CVaR)</p>
-                <p class="text-sm text-gray-700">
-                    Also known as Expected Shortfall. Average loss in the worst (1-α)% of cases.
-                    Provides better tail risk assessment than VaR alone.
-                </p>
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Monte Carlo Approach</p>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>1. Simulate portfolio returns using GBM</li>
+                    <li>2. Calculate losses for each simulation</li>
+                    <li>3. Sort losses in ascending order</li>
+                    <li>4. Find α-quantile for VaR</li>
+                    <li>5. Average tail losses for CVaR</li>
+                </ul>
             </div>
-            
-            <div>
-                <p class="font-semibold text-blue-800 mb-1">Regulatory Context</p>
-                <p class="text-sm text-gray-700">
-                    Basel Accords require banks to calculate VaR for market risk capital requirements.
-                    Typically use 99% confidence over 10-day horizon.
+
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Portfolio Loss Model</p>
+                <code class="text-xs bg-gray-100 px-2 py-1 rounded block mb-2">V_T = V₀ exp((μ - σ²/2)Δt + σ√Δt·Z)</code>
+                <code class="text-xs bg-gray-100 px-2 py-1 rounded block">Loss = V₀ - V_T</code>
+                <p class="text-xs text-gray-500 mt-2">
+                    Based on Geometric Brownian Motion assumption
                 </p>
             </div>
         </div>
     </div>
-</div>
 
-<div class="card bg-green-50">
-    <h3 class="text-xl font-bold text-green-900 mb-3">Advanced VaR Methods</h3>
-    
-    <div class="grid md:grid-cols-2 gap-6">
-        <div>
-            <p class="font-semibold text-green-800 mb-2">Importance Sampling</p>
-            <p class="text-sm text-gray-700 mb-3">
-                Variance reduction technique for efficient tail risk estimation, 
-                especially useful for high confidence levels (99%, 99.9%).
-            </p>
-            
-            <div class="bg-white p-3 rounded-lg mb-3">
-                <p class="font-semibold text-green-700 mb-1">Delta-Gamma Approximation</p>
-                <p class="text-xs text-gray-700">
-                    Q = a + bᵀZ + ZᵀΛZ<br>
-                    Uses portfolio Greeks for efficient importance sampling
-                </p>
+    <div class="card bg-gradient-to-br from-purple-50 to-indigo-50">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center text-white font-bold">
+                🎯
             </div>
-            
-            <ul class="text-sm text-gray-700 list-disc ml-5">
-                <li>Exponentially twist the distribution</li>
-                <li>Focus sampling on tail region</li>
-                <li>Dramatically reduces variance for rare events</li>
-                <li>Asymptotically optimal for large losses</li>
-            </ul>
+            <h3 class="text-xl font-bold text-gray-900">Advanced Methods</h3>
         </div>
         
-        <div>
-            <p class="font-semibold text-green-800 mb-2">Practical Considerations</p>
-            
-            <div class="space-y-3">
-                <div class="p-3 bg-white rounded-lg">
-                    <p class="font-semibold text-gray-700 mb-1">Advantages</p>
-                    <ul class="text-xs text-gray-700 list-disc ml-5">
-                        <li>Intuitive and widely accepted</li>
-                        <li>Captures nonlinearities and complex dependencies</li>
-                        <li>Works with any return distribution</li>
-                        <li>Flexible for different time horizons</li>
-                    </ul>
+        <div class="space-y-4">
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Importance Sampling</p>
+                <p class="text-sm text-gray-700 mb-2">
+                    Variance reduction for tail risk estimation, especially useful for high confidence levels.
+                </p>
+                
+                <div class="mt-3 p-3 bg-purple-50 rounded">
+                    <p class="font-semibold text-xs text-purple-800 mb-1">Delta-Gamma Approximation</p>
+                    <code class="text-xs bg-white px-2 py-1 rounded block">Q = a + bᵀZ + ZᵀΛZ</code>
+                    <p class="text-xs text-gray-600 mt-1">Uses portfolio Greeks for efficient sampling</p>
                 </div>
                 
-                <div class="p-3 bg-white rounded-lg">
-                    <p class="font-semibold text-gray-700 mb-1">Limitations</p>
-                    <ul class="text-xs text-gray-700 list-disc ml-5">
-                        <li>Does not measure worst-case loss</li>
-                        <li>Assumes normal market conditions</li>
-                        <li>Model risk in distribution assumptions</li>
-                        <li>Computationally intensive for large portfolios</li>
-                    </ul>
+                <ul class="text-sm text-gray-700 space-y-1 mt-2">
+                    <li>• Exponentially twist distribution</li>
+                    <li>• Focus sampling on tail region</li>
+                    <li>• Reduces variance for rare events</li>
+                    <li>• Asymptotically optimal</li>
+                </ul>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Practical Considerations</p>
+                
+                <div class="space-y-2">
+                    <div class="p-2 bg-green-50 rounded">
+                        <p class="font-semibold text-xs text-green-700 mb-1">Advantages</p>
+                        <ul class="text-xs text-gray-700 space-y-0.5">
+                            <li>• Intuitive and widely accepted</li>
+                            <li>• Captures nonlinearities</li>
+                            <li>• Works with any distribution</li>
+                            <li>• Flexible time horizons</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="p-2 bg-orange-50 rounded">
+                        <p class="font-semibold text-xs text-orange-700 mb-1">Limitations</p>
+                        <ul class="text-xs text-gray-700 space-y-0.5">
+                            <li>• Doesn't measure worst-case</li>
+                            <li>• Assumes normal conditions</li>
+                            <li>• Model risk in assumptions</li>
+                            <li>• Computationally intensive</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
             
-            <div class="mt-3 p-3 bg-green-100 rounded">
-                <p class="text-xs text-green-800">
-                    <strong>Reference:</strong> Glasserman, Heidelberger & Shahabuddin (2000) - 
-                    "Variance reduction techniques for estimating value-at-risk"
-                </p>
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Risk Management Applications</p>
+                <div class="grid grid-cols-3 gap-2 text-xs">
+                    <div class="text-center p-2 bg-blue-50 rounded">
+                        <div class="text-lg mb-1">📊</div>
+                        <div class="font-semibold">Portfolio</div>
+                        <div class="text-gray-600">Optimization</div>
+                    </div>
+                    <div class="text-center p-2 bg-blue-50 rounded">
+                        <div class="text-lg mb-1">🏛️</div>
+                        <div class="font-semibold">Regulatory</div>
+                        <div class="text-gray-600">Compliance</div>
+                    </div>
+                    <div class="text-center p-2 bg-blue-50 rounded">
+                        <div class="text-lg mb-1">🛡️</div>
+                        <div class="font-semibold">Risk</div>
+                        <div class="text-gray-600">Limits</div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
-
-<div class="card bg-purple-50">
-    <h3 class="text-xl font-bold text-purple-900 mb-3">Risk Management Applications</h3>
-    
-    <div class="grid md:grid-cols-3 gap-4">
-        <div class="text-center p-4 bg-white rounded-lg">
-            <div class="text-2xl text-purple-600 mb-2">📊</div>
-            <p class="font-semibold text-purple-800">Portfolio Optimization</p>
-            <p class="text-sm text-gray-700 mt-2">
-                Use VaR constraints to build efficient portfolios balancing return and risk
-            </p>
-        </div>
         
-        <div class="text-center p-4 bg-white rounded-lg">
-            <div class="text-2xl text-purple-600 mb-2">🏛️</div>
-            <p class="font-semibold text-purple-800">Regulatory Compliance</p>
-            <p class="text-sm text-gray-700 mt-2">
-                Meet capital requirements under Basel III/IV frameworks
+        <div class="mt-4 p-3 bg-purple-100 rounded-lg">
+            <p class="text-xs text-purple-800">
+                <strong>Reference:</strong> Glasserman, Heidelberger & Shahabuddin (2000) - 
+                Variance reduction techniques for estimating value-at-risk
             </p>
         </div>
-        
-        <div class="text-center p-4 bg-white rounded-lg">
-            <div class="text-2xl text-purple-600 mb-2">🛡️</div>
-            <p class="font-semibold text-purple-800">Risk Limits</p>
-            <p class="text-sm text-gray-700 mt-2">
-                Set and monitor trading limits based on VaR calculations
-            </p>
-        </div>
-    </div>
-    
-    <div class="mt-4 p-3 bg-purple-100 rounded">
-        <p class="text-sm text-purple-800">
-            <strong>Industry Practice:</strong> Most financial institutions use a combination of 
-            parametric, historical, and Monte Carlo VaR methods for comprehensive risk assessment.
-        </p>
     </div>
 </div>
 {% endblock %}
@@ -273,7 +340,7 @@ async function calculateVaR() {
     const calculateBtn = document.getElementById('calculateBtn');
     calculateBtn.disabled = true;
     showLoading('loading');
-    document.getElementById('results').style.display = 'none';
+    document.getElementById('results').classList.add('hidden');
     
     try {
         const response = await fetch('/api/calculate-var', {
@@ -294,15 +361,18 @@ async function calculateVaR() {
         const protectionLevel = ((1 - data.var / params.portfolioValue) * 100).toFixed(1);
         document.getElementById('protectionLevel').textContent = protectionLevel + '% of portfolio protected';
         
-        document.getElementById('results').style.display = 'block';
+        document.getElementById('results').classList.remove('hidden');
         
         // Create loss distribution plot
         const trace = {
             x: data.losses,
             type: 'histogram',
             name: 'Loss Distribution',
-            marker: { color: '#4f46e5' },
-            opacity: 0.7,
+            marker: { 
+                color: '#6366f1',
+                line: { color: '#4338ca', width: 1 }
+            },
+            opacity: 0.75,
             nbinsx: 50
         };
         
@@ -313,7 +383,8 @@ async function calculateVaR() {
             type: 'scatter',
             mode: 'lines',
             name: 'VaR ' + data.confidence + '%',
-            line: { color: '#ef4444', width: 3, dash: 'dash' }
+            line: { color: '#ef4444', width: 3, dash: 'dash' },
+            yaxis: 'y2'
         };
         
         // Add CVaR line
@@ -323,22 +394,39 @@ async function calculateVaR() {
             type: 'scatter',
             mode: 'lines',
             name: 'Conditional VaR',
-            line: { color: '#f59e0b', width: 3, dash: 'dash' }
+            line: { color: '#f97316', width: 3, dash: 'dash' },
+            yaxis: 'y2'
         };
         
         const layout = {
-            title: 'Portfolio Loss Distribution',
+            title: {
+                text: 'Portfolio Loss Distribution',
+                font: { size: 16, weight: 'bold' }
+            },
             xaxis: { 
                 title: 'Loss Amount ($)',
-                gridcolor: '#e5e7eb'
+                gridcolor: '#f3f4f6'
             },
             yaxis: { 
                 title: 'Frequency',
-                gridcolor: '#e5e7eb'
+                gridcolor: '#f3f4f6'
             },
-            plot_bgcolor: '#f8fafc',
-            paper_bgcolor: '#f8fafc',
+            yaxis2: {
+                overlaying: 'y',
+                side: 'right',
+                showgrid: false,
+                showticklabels: false
+            },
+            plot_bgcolor: '#fafafa',
+            paper_bgcolor: 'white',
             showlegend: true,
+            legend: {
+                x: 0.02,
+                y: 0.98,
+                bgcolor: 'rgba(255,255,255,0.9)',
+                bordercolor: '#e5e7eb',
+                borderwidth: 1
+            },
             shapes: [
                 {
                     type: 'rect',
@@ -348,14 +436,15 @@ async function calculateVaR() {
                     x1: Math.max(...data.losses),
                     y0: 0,
                     y1: 1,
-                    fillcolor: '#fef2f2',
+                    fillcolor: '#fee2e2',
                     opacity: 0.3,
                     line: { width: 0 }
                 }
-            ]
+            ],
+            margin: { l: 60, r: 60, t: 60, b: 60 }
         };
         
-        Plotly.newPlot('lossDistribution', [trace, varLine, cvarLine], layout);
+        Plotly.newPlot('lossDistribution', [trace, varLine, cvarLine], layout, {responsive: true});
         
     } catch (error) {
         showError(error.message);

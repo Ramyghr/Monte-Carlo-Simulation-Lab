@@ -1,0 +1,61 @@
+### 1. Stochastic Processes for Asset Path Generation
+
+The foundation of any Monte Carlo simulation for finance is the ability to generate realistic future asset price paths. This project uses several models:
+
+*   **Geometric Brownian Motion (GBM):** This is the most common model for stock prices. It assumes that asset returns are normally distributed and independent over time. The formula is:
+    `dS = μS dt + σS dW`
+    where `S` is the asset price, `μ` is the drift (expected return), `σ` is the volatility, and `dW` is a Wiener process (random shock). This is implemented in the `StochasticProcesses` class in `utils/monte_carlo.py`.
+
+*   **Ornstein-Uhlenbeck Process:** This is a mean-reverting process, often used for modeling interest rates or commodity prices. Unlike GBM, the price tends to revert to a long-term mean. The formula is:
+    `dx = θ(μ - x) dt + σ dW`
+    where `θ` is the speed of reversion, `μ` is the long-term mean, and `x` is the variable being modeled.
+
+The project also implements different numerical schemes to generate these paths:
+
+*   **Euler-Maruyama Scheme:** A simple and fast method for discretizing the stochastic differential equations. It's easy to implement but can be inaccurate for complex models.
+*   **Milstein Scheme:** A more sophisticated scheme that includes an additional term to improve the accuracy of the simulation, especially when volatility is not constant.
+
+### 2. Advanced Option Pricing
+
+The project goes beyond simple European options and implements pricing models for more complex, exotic options:
+
+*   **American Options (Longstaff-Schwartz Algorithm):** American options can be exercised at any time before expiration, which makes them difficult to price with a simple Monte Carlo simulation. This project uses the **Longstaff-Schwartz algorithm**, a powerful technique that combines Monte Carlo simulation with regression analysis. The key steps are:
+    1.  Simulate a large number of asset price paths.
+    2.  Work backward from the expiration date. At each time step, perform a regression of the future discounted cash flows on the current asset price.
+    3.  This regression function provides an estimate of the "continuation value" (the value of holding the option).
+    4.  The optimal exercise strategy is to exercise the option if the immediate exercise value is greater than the continuation value. This logic is found in `utils/financial_models.py` in the `american_longstaff_schwartz` function.
+
+*   **Path-Dependent Options (Asian and Barrier):**
+    *   **Asian Options:** The payoff depends on the *average* asset price over a period. The pricing involves simulating paths, calculating the average price for each path, and then calculating the payoff.
+    *   **Barrier Options:** These options are activated ("knock-in") or extinguished ("knock-out") if the asset price crosses a predetermined barrier level. The pricing algorithm must check at each step of the simulation whether the barrier has been breached.
+
+### 3. Risk Management Metrics
+
+The project implements industry-standard risk metrics:
+
+*   **Value at Risk (VaR):** VaR answers the question: "What is the maximum loss I can expect over a given time horizon with a certain level of confidence?" For example, a 1-day 99% VaR of $1 million means that there is a 1% chance of losing more than $1 million in a single day. It is calculated by finding a specific percentile of the distribution of simulated portfolio returns.
+
+*   **Conditional Value at Risk (CVaR):** Also known as Expected Shortfall, CVaR answers the question: "If I do have a loss exceeding my VaR, what is the average size of that loss?" It is a more conservative risk measure than VaR because it considers the severity of losses in the tail of the distribution. It's calculated by taking the average of all losses that are greater than the VaR.
+
+*   **Correlated Portfolio Simulation (Cholesky Decomposition):** When analyzing a portfolio of multiple assets, it's crucial to model how their returns move together. This project uses **Cholesky decomposition** to generate correlated random numbers. A correlation matrix is decomposed into a lower triangular matrix, which is then used to transform independent random variables into correlated ones, realistically simulating how a diversified portfolio would behave. This is implemented in the `generate_correlated_returns` function in `utils/monte_carlo.py`.
+
+### 4. The "Greeks": Option Sensitivities
+
+The "Greeks" measure an option's sensitivity to various market factors. They are essential for hedging and risk management. The project calculates them using numerical differentiation (bumping the input parameters and re-pricing the option):
+
+*   **Delta:** Sensitivity of the option price to a change in the underlying asset price.
+*   **Gamma:** Sensitivity of the Delta to a change in the underlying asset price (i.e., the second derivative).
+*   **Vega:** Sensitivity to a change in the volatility of the underlying asset.
+*   **Theta:** Sensitivity to the passage of time (time decay).
+*   **Rho:** Sensitivity to a change in the risk-free interest rate.
+
+This calculation is handled by the `GreeksCalculator` class in `utils/monte_carlo.py`.
+
+### 5. Variance Reduction Techniques
+
+A key challenge in Monte Carlo simulation is that it can be computationally expensive to achieve a desired level of accuracy. This project implements **variance reduction techniques** to get more precise estimates with fewer simulations:
+
+*   **Antithetic Variates:** For each simulated path, a second "antithetic" path is generated using the negative of the random numbers from the first path. The average of the two payoffs has a lower variance than a single payoff.
+*   **Control Variates:** A known, analytically solvable problem (like a European option priced with the Black-Scholes formula) is used as a "control" to reduce the variance of the estimate for a more complex problem (like an Asian option).
+
+These techniques are implemented in the `VarianceReduction` class in `utils/monte_carlo.py`.

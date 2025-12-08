@@ -1,0 +1,41 @@
+This project is a web-based "Monte Carlo Simulation Laboratory" for financial engineering. It's built with a Flask backend, and a frontend that uses Tailwind CSS for styling and Plotly.js for interactive charts.
+
+Here’s a breakdown of the project:
+
+### Architecture
+
+The application has a well-defined, multi-layered architecture:
+
+1.  **Presentation Layer (`templates/` & `app.py` routes):** The Flask web server renders HTML pages that provide the user interface for each feature. These pages contain input forms for users to enter simulation parameters. The frontend uses JavaScript to send these parameters to the backend via asynchronous API calls and then renders the results and interactive charts using the Plotly.js library.
+2.  **Controller Layer (`app.py` API endpoints):** The main `app.py` file defines a series of API endpoints (e.g., `/api/price_option`). These endpoints act as the bridge between the frontend and the backend logic. They receive parameters from the user's browser, invoke the appropriate backend functions, and return the results in JSON format.
+3.  **Service/Application Layer (`utils/financial_models.py`):** This layer contains high-level classes and functions that represent specific financial concepts. For example, it has an `OptionPricer` for calculating the value of various options and `RiskMetrics` for performing risk analysis. These services use the low-level tools from the core engine to perform their calculations.
+4.  **Core Engine Layer (`utils/monte_carlo.py`):** This is the mathematical heart of the application. It provides a powerful and reusable toolkit of low-level components for running Monte Carlo simulations. This includes tools for generating random asset price paths (using models like Geometric Brownian Motion), applying variance reduction techniques to improve accuracy, and analyzing the convergence of the simulations.
+
+### Key Features
+
+The application provides a rich set of features for financial analysis and education:
+
+*   **Option Pricing:** The platform can price a wide variety of financial options, including:
+    *   Simple **European Options**.
+    *   **American Options**, which can be exercised at any time (implemented using the advanced Longstaff-Schwartz algorithm).
+    *   Path-dependent options like **Asian Options** (price depends on the average asset price) and **Barrier Options** (activated or deactivated if the asset price crosses a certain level).
+*   **Risk Management:** It includes powerful tools for measuring and managing financial risk:
+    *   **Value at Risk (VaR)** and **Conditional VaR (CVaR)** calculations for single assets and multi-asset portfolios.
+    *   For portfolios, it uses **Cholesky decomposition** to model correlated asset returns, providing a more realistic risk assessment.
+    *   It also offers an advanced **portfolio risk decomposition** to understand the contribution of each asset to the overall portfolio risk.
+*   **Stochastic Modeling:** Users can generate and visualize asset price paths using various mathematical models and numerical schemes:
+    *   **Models:** Geometric Brownian Motion (GBM), Ornstein-Uhlenbeck.
+    *   **Schemes:** Euler, Milstein, and Exact simulation schemes.
+*   **Analysis & Education:** The platform is also a powerful educational tool:
+    *   It allows users to visually analyze the **convergence** of Monte Carlo simulations to see how the accuracy improves with more simulations.
+    *   It provides a way to compare the effectiveness of different **variance reduction techniques**.
+    *   It can calculate and visualize an option's sensitivities to different market factors, known as **"the Greeks"** (e.g., Delta, Gamma, Vega).
+
+### Key Files
+
+*   `app.py`: The main application file. It contains all the URL routes and acts as the central controller, connecting the web interface to the backend logic.
+*   `utils/monte_carlo.py`: The core mathematical engine of the project. It contains the fundamental building blocks for all simulations, such as path generation, variance reduction, and convergence analysis.
+*   `utils/financial_models.py`: This file represents the "application layer." It takes the low-level tools from `monte_carlo.py` and assembles them into concrete, high-level financial models for pricing options and analyzing risk.
+*   `templates/base.html`: This is the master template for the user interface. It defines the overall layout, navigation, and specifies the frontend technologies used (Tailwind CSS and Plotly.js).
+
+In summary, this is a comprehensive and well-architected application that serves as both a practical tool for financial analysis and an educational platform for learning about Monte Carlo methods in finance.

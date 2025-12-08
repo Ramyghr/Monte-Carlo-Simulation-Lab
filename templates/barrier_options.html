@@ -1,211 +1,359 @@
 {% extends "base.html" %}
 
-{% block title %}Barrier Options - Monte Carlo Lab{% endblock %}
+{% block title %}Barrier Options Pricing - Monte Carlo Lab{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2 class="text-2xl font-bold text-indigo-900 mb-4">Barrier Option Pricing</h2>
-    <p class="text-gray-700 mb-4">
-        Price barrier options that become active (knock-in) or cease to exist (knock-out) when the underlying asset price hits a predetermined barrier level.
-    </p>
+<!-- Hero Card -->
+<div class="card border-l-4 border-red-500">
+    <div class="flex items-start gap-4">
+        <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
+            🚧
+        </div>
+        <div class="flex-1">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Barrier Option Pricing</h2>
+            <p class="text-gray-600 leading-relaxed">
+                Price barrier options that <strong>activate (knock-in)</strong> or <strong>cease to exist (knock-out)</strong> 
+                when the underlying asset price hits a predetermined barrier level. Barrier options are path-dependent 
+                and typically cheaper than vanilla options, making them popular for cost-effective hedging strategies 
+                in range-bound markets.
+            </p>
+        </div>
+    </div>
+</div>
 
-    <div class="grid md:grid-cols-2 gap-6">
-        <div>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Initial Price (S₀)
-                    </label>
-                    <input type="number" id="S0" value="100" class="input-field">
+<div class="grid lg:grid-cols-2 gap-6">
+    <!-- Parameters Panel -->
+    <div class="space-y-6">
+        <!-- Market Parameters -->
+        <div class="card">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
                 </div>
+                <h3 class="text-xl font-bold text-gray-900">Market Parameters</h3>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Strike Price (K)
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Initial Price (S₀) <span class="text-gray-400 font-normal">$</span>
                     </label>
-                    <input type="number" id="K" value="100" class="input-field">
+                    <input type="number" id="S0" value="100" step="0.01" min="0.01" 
+                           class="input-field" placeholder="100.00">
+                    <p class="text-xs text-gray-500 mt-1">Starting asset price</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Barrier Level
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Strike Price (K) <span class="text-gray-400 font-normal">$</span>
                     </label>
-                    <input type="number" id="barrier" value="110" class="input-field">
+                    <input type="number" id="K" value="100" step="0.01" min="0.01" 
+                           class="input-field" placeholder="100.00">
+                    <p class="text-xs text-gray-500 mt-1">Exercise price</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Time to Maturity (T)
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Barrier Level (H) <span class="text-gray-400 font-normal">$</span>
                     </label>
-                    <input type="number" id="T" value="1" step="0.1" class="input-field">
+                    <input type="number" id="barrier" value="110" step="0.01" min="0.01" 
+                           class="input-field" placeholder="110.00">
+                    <p class="text-xs text-gray-500 mt-1">Knock-in/out threshold</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Risk-free Rate (r)
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Time to Maturity (T) <span class="text-gray-400 font-normal">years</span>
                     </label>
-                    <input type="number" id="r" value="0.05" step="0.01" class="input-field">
+                    <input type="number" id="T" value="1" step="0.1" min="0.01" max="10" 
+                           class="input-field" placeholder="1.0">
+                    <p class="text-xs text-gray-500 mt-1">Monitoring period</p>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Volatility (σ)
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Risk-free Rate (r) <span class="text-gray-400 font-normal">%</span>
                     </label>
-                    <input type="number" id="sigma" value="0.2" step="0.01" class="input-field">
+                    <input type="number" id="r" value="5" step="0.1" min="0" max="100" 
+                           class="input-field" placeholder="5.0">
+                    <p class="text-xs text-gray-500 mt-1">Annual rate</p>
                 </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Volatility (σ) <span class="text-gray-400 font-normal">%</span>
+                    </label>
+                    <input type="number" id="sigma" value="20" step="0.1" min="0.1" max="200" 
+                           class="input-field" placeholder="20.0">
+                    <p class="text-xs text-gray-500 mt-1">Annual volatility</p>
+                </div>
+                
                 <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Simulations
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Simulations <span class="text-gray-400 font-normal">#</span>
                     </label>
-                    <input type="number" id="simulations" value="10000" step="1000" class="input-field">
+                    <input type="number" id="simulations" value="10000" step="1000" min="1000" max="100000" 
+                           class="input-field" placeholder="10000">
+                    <p class="text-xs text-gray-500 mt-1">Monte Carlo paths</p>
                 </div>
             </div>
+        </div>
 
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Barrier Type
-                </label>
-                <div class="grid grid-cols-2 gap-2">
-                    <label class="flex items-center p-2 border rounded-lg cursor-pointer hover:bg-gray-50">
-                        <input type="radio" name="optionType" value="up-and-out" checked class="mr-2">
-                        <div>
-                            <div class="font-medium">Up-and-Out</div>
-                            <div class="text-xs text-gray-500">Knocks out when price rises above barrier</div>
+        <!-- Barrier Configuration -->
+        <div class="card">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Barrier Configuration</h3>
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Barrier Type</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="flex items-start gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-red-500 transition">
+                        <input type="radio" name="optionType" value="up-and-out" checked class="mt-1 w-5 h-5 text-red-600">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-900">Up-and-Out</div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                Knocks out when S ≥ H<br>
+                                <span class="text-red-600">⬆️ Barrier above spot</span>
+                            </div>
                         </div>
                     </label>
-                    <label class="flex items-center p-2 border rounded-lg cursor-pointer hover:bg-gray-50">
-                        <input type="radio" name="optionType" value="down-and-out" class="mr-2">
-                        <div>
-                            <div class="font-medium">Down-and-Out</div>
-                            <div class="text-xs text-gray-500">Knocks out when price falls below barrier</div>
+                    
+                    <label class="flex items-start gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-red-500 transition">
+                        <input type="radio" name="optionType" value="down-and-out" class="mt-1 w-5 h-5 text-red-600">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-900">Down-and-Out</div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                Knocks out when S ≤ H<br>
+                                <span class="text-red-600">⬇️ Barrier below spot</span>
+                            </div>
                         </div>
                     </label>
-                    <label class="flex items-center p-2 border rounded-lg cursor-pointer hover:bg-gray-50">
-                        <input type="radio" name="optionType" value="up-and-in" class="mr-2">
-                        <div>
-                            <div class="font-medium">Up-and-In</div>
-                            <div class="text-xs text-gray-500">Knocks in when price rises above barrier</div>
+                    
+                    <label class="flex items-start gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-red-500 transition">
+                        <input type="radio" name="optionType" value="up-and-in" class="mt-1 w-5 h-5 text-red-600">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-900">Up-and-In</div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                Knocks in when S ≥ H<br>
+                                <span class="text-green-600">⬆️ Activates on breach</span>
+                            </div>
                         </div>
                     </label>
-                    <label class="flex items-center p-2 border rounded-lg cursor-pointer hover:bg-gray-50">
-                        <input type="radio" name="optionType" value="down-and-in" class="mr-2">
-                        <div>
-                            <div class="font-medium">Down-and-In</div>
-                            <div class="text-xs text-gray-500">Knocks in when price falls below barrier</div>
+                    
+                    <label class="flex items-start gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-red-500 transition">
+                        <input type="radio" name="optionType" value="down-and-in" class="mt-1 w-5 h-5 text-red-600">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-900">Down-and-In</div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                Knocks in when S ≤ H<br>
+                                <span class="text-green-600">⬇️ Activates on breach</span>
+                            </div>
                         </div>
                     </label>
                 </div>
             </div>
+        </div>
 
-            <button onclick="priceBarrierOption()" class="btn-primary w-full mb-4" id="priceBtn">
+        <!-- Action Buttons -->
+        <div class="space-y-3">
+            <button onclick="priceBarrierOption()" id="priceBtn" 
+                    class="btn-primary w-full text-lg py-4 flex items-center justify-center gap-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
                 Price Barrier Option
             </button>
+            
+            <button onclick="exportResults()" id="exportBtn" disabled
+                    class="btn-secondary w-full flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Export Results
+            </button>
+        </div>
 
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p class="mt-2 text-gray-600">Calculating...</p>
+        <!-- Loading Indicator -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p class="mt-4 text-gray-600 font-medium">Monitoring barrier breaches...</p>
+            <p class="text-sm text-gray-500 mt-2">Simulating price paths</p>
+        </div>
+    </div>
+
+    <!-- Results Panel -->
+    <div class="space-y-6">
+        <!-- Results Cards -->
+        <div id="results" class="space-y-4 hidden">
+            <div class="card bg-gradient-to-br from-red-50 to-rose-50 border-2 border-red-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">Pricing Results</h3>
+                    <span class="info-badge success-badge">
+                        ✓ Completed
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white rounded-xl p-4 shadow-sm border-2 border-red-200">
+                        <div class="text-sm text-gray-600 font-medium mb-1">Barrier Option Price</div>
+                        <div class="text-3xl font-bold text-red-600" id="optionPrice">-</div>
+                        <div class="text-xs text-gray-500 mt-1">Monte Carlo estimate</div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm border-2 border-orange-200">
+                        <div class="text-sm text-gray-600 font-medium mb-1">Knockout Probability</div>
+                        <div class="text-3xl font-bold text-orange-600" id="knockoutProb">-</div>
+                        <div class="text-xs text-gray-500 mt-1">Barrier breach rate</div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <div class="text-sm text-gray-600 font-medium mb-1">Barrier Type</div>
+                        <div class="text-lg font-bold text-gray-900" id="barrierTypeDisplay">-</div>
+                        <div class="text-xs text-gray-500 mt-1" id="barrierDescription">-</div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <div class="text-sm text-gray-600 font-medium mb-1">Effective Price</div>
+                        <div class="text-xl font-bold text-gray-900" id="effectivePrice">-</div>
+                        <div class="text-xs text-gray-500 mt-1">vs vanilla option</div>
+                    </div>
+                </div>
             </div>
 
-            <div id="results" class="bg-indigo-50 p-4 rounded-lg space-y-2" style="display: none;">
-                <div class="text-sm text-gray-600">
-                    <strong>Barrier Option Price:</strong> $<span id="optionPrice"></span>
-                </div>
-                <div class="text-sm text-gray-600">
-                    <strong>Knock-out Probability:</strong> <span id="knockOutProb"></span>%
-                </div>
-                <div class="text-sm text-gray-600">
-                    <strong>Barrier Type:</strong> <span id="barrierType"></span>
+            <!-- Barrier Analysis -->
+            <div class="card">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">Barrier Analysis</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span class="text-sm font-medium text-gray-700">Initial Price (S₀)</span>
+                        <span class="font-bold text-gray-900" id="initialPrice">-</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span class="text-sm font-medium text-gray-700">Barrier Level (H)</span>
+                        <span class="font-bold text-gray-900" id="barrierLevel">-</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span class="text-sm font-medium text-gray-700">Distance to Barrier</span>
+                        <span class="font-bold" id="barrierDistance">-</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div>
-            <div id="pathPlot" style="width: 100%; height: 500px;"></div>
+        <!-- Visualization -->
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Price Paths & Barrier</h3>
+                <div class="info-badge">
+                    Sample paths shown
+                </div>
+            </div>
+            <div id="plot" style="width: 100%; height: 450px;"></div>
         </div>
     </div>
 </div>
 
-<div class="grid md:grid-cols-2 gap-6">
-    <div class="card bg-red-50">
-        <h3 class="text-xl font-bold text-red-900 mb-2">Barrier Option Types</h3>
+<!-- Theory Section -->
+<div class="grid lg:grid-cols-3 gap-6 mt-6">
+    <div class="card bg-gradient-to-br from-red-50 to-rose-50">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center text-white font-bold">
+                🚧
+            </div>
+            <h3 class="text-lg font-bold text-gray-900">Knock-Out Options</h3>
+        </div>
         
-        <div class="space-y-4">
-            <div>
-                <p class="font-semibold text-red-800 mb-1">Knock-Out Options</p>
-                <ul class="text-sm text-gray-700 list-disc ml-5">
-                    <li><strong>Up-and-Out:</strong> Cease to exist if price rises above barrier</li>
-                    <li><strong>Down-and-Out:</strong> Cease to exist if price falls below barrier</li>
-                    <li>Cheaper than vanilla options</li>
-                    <li>Common for range-bound markets</li>
-                </ul>
+        <div class="space-y-3 text-sm">
+            <div class="bg-white rounded-lg p-3">
+                <p class="font-semibold text-gray-900 mb-1">Up-and-Out</p>
+                <p class="text-gray-600">Option ceases if S ≥ H. Cheaper when barrier is far from spot.</p>
             </div>
-            
-            <div>
-                <p class="font-semibold text-red-800 mb-1">Knock-In Options</p>
-                <ul class="text-sm text-gray-700 list-disc ml-5">
-                    <li><strong>Up-and-In:</strong> Become active if price rises above barrier</li>
-                    <li><strong>Down-and-In:</strong> Become active if price falls below barrier</li>
-                    <li>Cheaper upfront cost</li>
-                    <li>Activate only in certain market conditions</li>
-                </ul>
+            <div class="bg-white rounded-lg p-3">
+                <p class="font-semibold text-gray-900 mb-1">Down-and-Out</p>
+                <p class="text-gray-600">Option ceases if S ≤ H. Popular for protecting downside.</p>
             </div>
+            <p class="text-xs text-gray-500 italic">
+                Knock-outs are cheaper than vanilla as they may expire worthless before maturity
+            </p>
         </div>
     </div>
 
-    <div class="card bg-blue-50">
-        <h3 class="text-xl font-bold text-blue-900 mb-2">Pricing Considerations</h3>
+    <div class="card bg-gradient-to-br from-green-50 to-emerald-50">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center text-white font-bold">
+                ✅
+            </div>
+            <h3 class="text-lg font-bold text-gray-900">Knock-In Options</h3>
+        </div>
         
-        <div class="space-y-3">
-            <div>
-                <p class="font-semibold text-blue-800">Monitoring Frequency</p>
-                <p class="text-sm text-gray-700">
-                    Continuous monitoring vs discrete monitoring affects prices. 
-                    More frequent monitoring increases knock-out probability.
-                </p>
+        <div class="space-y-3 text-sm">
+            <div class="bg-white rounded-lg p-3">
+                <p class="font-semibold text-gray-900 mb-1">Up-and-In</p>
+                <p class="text-gray-600">Activates only if S ≥ H. Cheaper upfront cost.</p>
             </div>
-            
-            <div>
-                <p class="font-semibold text-blue-800">Barrier Position</p>
-                <ul class="text-sm text-gray-700 list-disc ml-5">
-                    <li>Barrier above spot: More expensive for knock-outs</li>
-                    <li>Barrier below spot: Cheaper for knock-outs</li>
-                    <li>At-the-money barriers: Highest sensitivity</li>
-                </ul>
+            <div class="bg-white rounded-lg p-3">
+                <p class="font-semibold text-gray-900 mb-1">Down-and-In</p>
+                <p class="text-gray-600">Activates only if S ≤ H. Used for triggered protection.</p>
             </div>
-            
-            <div>
-                <p class="font-semibold text-blue-800">Rebates</p>
-                <p class="text-sm text-gray-700">
-                    Some barrier options pay rebates if knocked out, 
-                    increasing their value compared to non-rebate versions.
-                </p>
+            <p class="text-xs text-gray-500 italic">
+                Knock-ins activate only when specific market condition occurs
+            </p>
+        </div>
+    </div>
+
+    <div class="card bg-gradient-to-br from-blue-50 to-cyan-50">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white font-bold">
+                💡
+            </div>
+            <h3 class="text-lg font-bold text-gray-900">Key Properties</h3>
+        </div>
+        
+        <div class="space-y-3 text-sm">
+            <div class="bg-white rounded-lg p-3">
+                <p class="font-semibold text-gray-900 mb-1">In-Out Parity</p>
+                <p class="text-gray-600 font-mono text-xs">Knock-In + Knock-Out = Vanilla</p>
+            </div>
+            <div class="bg-white rounded-lg p-3">
+                <p class="font-semibold text-gray-900 mb-1">Monitoring</p>
+                <p class="text-gray-600">Continuous monitoring increases knockout probability vs discrete</p>
+            </div>
+            <div class="bg-white rounded-lg p-3">
+                <p class="font-semibold text-gray-900 mb-1">Rebates</p>
+                <p class="text-gray-600">Some pay rebates if knocked out, increasing value</p>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card bg-green-50">
-    <h3 class="text-xl font-bold text-green-900 mb-3">Applications & Strategies</h3>
-    
-    <div class="grid md:grid-cols-2 gap-6">
-        <div>
-            <p class="font-semibold text-green-800 mb-2">Hedging Strategies</p>
-            <ul class="text-sm text-gray-700 list-disc ml-5 space-y-2">
-                <li><strong>Cost Reduction:</strong> Use knock-outs to reduce hedging costs when certain price levels are unlikely</li>
-                <li><strong>View-Based:</strong> Use knock-ins for cheaper exposure to expected market moves</li>
-                <li><strong>Range Trading:</strong> Combine knock-outs with other instruments for range-bound strategies</li>
-            </ul>
+<!-- Applications -->
+<div class="card bg-gradient-to-br from-purple-50 to-pink-50 mt-6">
+    <h3 class="text-xl font-bold text-gray-900 mb-4">Market Applications</h3>
+    <div class="grid md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-lg p-4">
+            <div class="text-2xl mb-2">💰</div>
+            <p class="font-semibold text-purple-800 mb-2">Cost Reduction</p>
+            <p class="text-sm text-gray-700">
+                30-50% cheaper than vanilla options when barrier is set appropriately. 
+                Ideal for budget-conscious hedgers.
+            </p>
         </div>
-        
-        <div>
-            <p class="font-semibold text-green-800 mb-2">Market Conditions</p>
-            <ul class="text-sm text-gray-700 list-disc ml-5 space-y-2">
-                <li><strong>High Volatility:</strong> Higher knock-out probabilities, cheaper premiums</li>
-                <li><strong>Trending Markets:</strong> Careful barrier placement crucial</li>
-                <li><strong>Sideways Markets:</strong> Ideal for knock-out options</li>
-            </ul>
-            
-            <div class="mt-3 p-3 bg-green-100 rounded">
-                <p class="text-xs text-green-800">
-                    <strong>Note:</strong> Barrier options are sensitive to discrete monitoring and may face 
-                    "window dressing" effects near barrier levels.
-                </p>
-            </div>
+        <div class="bg-white rounded-lg p-4">
+            <div class="text-2xl mb-2">📊</div>
+            <p class="font-semibold text-purple-800 mb-2">Range Trading</p>
+            <p class="text-sm text-gray-700">
+                Popular in FX markets for trading within expected ranges. 
+                Knock-outs work well in stable environments.
+            </p>
+        </div>
+        <div class="bg-white rounded-lg p-4">
+            <div class="text-2xl mb-2">🎯</div>
+            <p class="font-semibold text-purple-800 mb-2">Structured Products</p>
+            <p class="text-sm text-gray-700">
+                Embedded in autocallables, reverse convertibles, 
+                and other structured notes for retail investors.
+            </p>
         </div>
     </div>
 </div>
@@ -213,74 +361,204 @@
 
 {% block extra_js %}
 <script>
+let currentResults = null;
+
 async function priceBarrierOption() {
     const params = {
         S0: parseFloat(document.getElementById('S0').value),
         K: parseFloat(document.getElementById('K').value),
         barrier: parseFloat(document.getElementById('barrier').value),
         T: parseFloat(document.getElementById('T').value),
-        r: parseFloat(document.getElementById('r').value),
-        sigma: parseFloat(document.getElementById('sigma').value),
+        r: parseFloat(document.getElementById('r').value) / 100,
+        sigma: parseFloat(document.getElementById('sigma').value) / 100,
         simulations: parseInt(document.getElementById('simulations').value),
         optionType: document.querySelector('input[name="optionType"]:checked').value
     };
     
+    // Validation
+    if (params.S0 <= 0 || params.K <= 0 || params.barrier <= 0 || params.T <= 0 || params.sigma <= 0) {
+        showToast('All parameters must be positive', 'error');
+        return;
+    }
+    
+    // Check barrier position
+    const barrierType = params.optionType;
+    if (barrierType.includes('up') && params.barrier <= params.S0) {
+        showToast('Up barrier should be above initial price', 'warning');
+    } else if (barrierType.includes('down') && params.barrier >= params.S0) {
+        showToast('Down barrier should be below initial price', 'warning');
+    }
+    
     const priceBtn = document.getElementById('priceBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    
     priceBtn.disabled = true;
+    exportBtn.disabled = true;
     showLoading('loading');
-    document.getElementById('results').style.display = 'none';
+    document.getElementById('results').classList.add('hidden');
     
     try {
         const response = await fetch('/api/price-barrier-option', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(params)
         });
         
+        if (!response.ok) throw new Error('Server error');
+        
         const data = await response.json();
+        currentResults = data;
         
         // Update results
-        document.getElementById('optionPrice').textContent = data.price.toFixed(4);
-        document.getElementById('knockOutProb').textContent = (data.knockOutProbability * 100).toFixed(2);
-        document.getElementById('barrierType').textContent = params.optionType.replace('-and-', ' & ').toUpperCase();
-        document.getElementById('results').style.display = 'block';
+        document.getElementById('optionPrice').textContent = '$' + data.price.toFixed(4);
+        document.getElementById('knockoutProb').textContent = (data.knockOutProbability * 100).toFixed(2) + '%';
         
-        // Create sample path visualization (placeholder)
-        const trace = {
-            x: Array.from({length: 100}, (_, i) => i),
-            y: Array.from({length: 100}, () => 100 + Math.random() * 30),
-            type: 'scatter',
-            mode: 'lines',
-            name: 'Sample Path',
-            line: { color: '#4f46e5' }
-        };
+        const typeDisplay = params.optionType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' & ');
+        document.getElementById('barrierTypeDisplay').textContent = typeDisplay;
         
-        const barrierLine = {
-            x: [0, 99],
-            y: [params.barrier, params.barrier],
-            type: 'scatter',
-            mode: 'lines',
-            name: 'Barrier',
-            line: { color: '#ef4444', dash: 'dash', width: 2 }
-        };
+        const isKnockOut = params.optionType.includes('out');
+        document.getElementById('barrierDescription').textContent = 
+            isKnockOut ? 'Ceases if barrier breached' : 'Activates if barrier breached';
         
-        const layout = {
-            title: 'Sample Price Path with Barrier',
-            xaxis: { title: 'Time Step' },
-            yaxis: { title: 'Price' },
-            showlegend: true
-        };
+        // Barrier analysis
+        document.getElementById('initialPrice').textContent = '$' + params.S0.toFixed(2);
+        document.getElementById('barrierLevel').textContent = '$' + params.barrier.toFixed(2);
         
-        Plotly.newPlot('pathPlot', [trace, barrierLine], layout);
+        const distance = Math.abs(params.barrier - params.S0);
+        const distancePercent = (distance / params.S0 * 100).toFixed(1);
+        const distanceColor = distance > params.S0 * 0.1 ? 'text-green-600' : 'text-orange-600';
+        document.getElementById('barrierDistance').className = `font-bold ${distanceColor}`;
+        document.getElementById('barrierDistance').textContent = `$${distance.toFixed(2)} (${distancePercent}%)`;
+        
+        // Effective price comparison (assuming vanilla would be ~20-30% more)
+        const vanillaEstimate = data.price / (isKnockOut ? 0.7 : 0.8);
+        document.getElementById('effectivePrice').textContent = `~${(data.price / vanillaEstimate * 100).toFixed(0)}% of vanilla`;
+        
+        // Show results
+        document.getElementById('results').classList.remove('hidden');
+        exportBtn.disabled = false;
+        
+        // Plot with barrier
+        plotPathsWithBarrier(params);
+        
+        showToast('Barrier option pricing completed!', 'success');
         
     } catch (error) {
-        showError(error.message);
+        showToast('Calculation failed: ' + error.message, 'error');
+        console.error(error);
     } finally {
         hideLoading('loading');
         priceBtn.disabled = false;
     }
+}
+
+function plotPathsWithBarrier(params) {
+    // Generate sample paths for visualization
+    const numPaths = 5;
+    const numSteps = 100;
+    const dt = params.T / numSteps;
+    
+    const traces = [];
+    
+    for (let p = 0; p < numPaths; p++) {
+        const path = [params.S0];
+        let S = params.S0;
+        let knocked = false;
+        
+        for (let i = 0; i < numSteps; i++) {
+            const z = Math.random() < 0.5 ? -1 : 1;
+            const dW = z * Math.sqrt(dt);
+            S = S * Math.exp((params.r - 0.5 * params.sigma**2) * dt + params.sigma * dW);
+            path.push(S);
+            
+            // Check if knocked
+            if ((params.optionType.includes('up') && S >= params.barrier) ||
+                (params.optionType.includes('down') && S <= params.barrier)) {
+                knocked = true;
+            }
+        }
+        
+        traces.push({
+            x: Array.from({length: numSteps + 1}, (_, i) => i * dt),
+            y: path,
+            type: 'scatter',
+            mode: 'lines',
+            name: `Path ${p + 1}`,
+            line: { 
+                width: 2,
+                color: knocked ? '#ef4444' : '#10b981'
+            },
+            hovertemplate: 'Time: %{x:.2f}y<br>Price: $%{y:.2f}<extra></extra>'
+        });
+    }
+    
+    // Add barrier line
+    traces.push({
+        x: [0, params.T],
+        y: [params.barrier, params.barrier],
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Barrier Level',
+        line: { 
+            color: '#f59e0b',
+            width: 3,
+            dash: 'dash'
+        }
+    });
+    
+    // Add strike line
+    traces.push({
+        x: [0, params.T],
+        y: [params.K, params.K],
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Strike Price',
+        line: { 
+            color: '#6366f1',
+            width: 2,
+            dash: 'dot'
+        }
+    });
+    
+    const layout = {
+        title: {
+            text: 'Sample Price Paths with Barrier',
+            font: { size: 18, weight: 'bold' }
+        },
+        xaxis: { 
+            title: 'Time (years)',
+            gridcolor: '#f3f4f6'
+        },
+        yaxis: { 
+            title: 'Stock Price ($)',
+            gridcolor: '#f3f4f6'
+        },
+        plot_bgcolor: '#fafafa',
+        paper_bgcolor: 'white',
+        showlegend: true,
+        legend: { x: 1.05, y: 1 },
+        margin: { l: 60, r: 150, t: 60, b: 60 }
+    };
+    
+    Plotly.newPlot('plot', traces, layout, {responsive: true});
+}
+
+function exportResults() {
+    if (!currentResults) return;
+    
+    const csv = ['Payoff'];
+    currentResults.payoffs.forEach(payoff => {
+        csv.push(payoff);
+    });
+    
+    const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'barrier_option_results.csv';
+    a.click();
+    
+    showToast('Results exported successfully!', 'success');
 }
 </script>
 {% endblock %}

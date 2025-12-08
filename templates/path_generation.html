@@ -3,202 +3,269 @@
 {% block title %}Path Generation - Monte Carlo Lab{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2 class="text-2xl font-bold text-indigo-900 mb-4">Path Generation Methods</h2>
-    <p class="text-gray-700 mb-4">
-        Generate sample paths for asset prices using different discretization schemes. 
-        Compare Euler-Maruyama and Milstein schemes for simulating stochastic differential equations.
-        Based on the theoretical framework from Chen and Hong (2008).
-    </p>
+<!-- Hero Card -->
+<div class="card border-l-4 border-indigo-500">
+    <div class="flex items-start gap-4">
+        <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
+            📈
+        </div>
+        <div class="flex-1">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Path Generation Methods</h2>
+            <p class="text-gray-600 leading-relaxed">
+                Generate sample paths for asset prices using different <strong>discretization schemes</strong>. 
+                Compare <strong>Euler-Maruyama</strong> and <strong>Milstein</strong> schemes for simulating 
+                stochastic differential equations based on the theoretical framework from Chen and Hong (2008).
+            </p>
+        </div>
+    </div>
+</div>
 
-    <div class="grid md:grid-cols-2 gap-6">
-        <div>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Initial Price (S₀)
-                    </label>
-                    <input type="number" id="S0" value="100" class="input-field">
+<div class="grid lg:grid-cols-2 gap-6">
+    <!-- Parameters Panel -->
+    <div class="space-y-6">
+        <!-- Market Parameters -->
+        <div class="card">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Drift (μ)
-                    </label>
-                    <input type="number" id="mu" value="0.05" step="0.01" class="input-field">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Volatility (σ)
-                    </label>
-                    <input type="number" id="sigma" value="0.2" step="0.01" class="input-field">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Time Horizon (T)
-                    </label>
-                    <input type="number" id="T" value="1" step="0.1" class="input-field">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Time Steps
-                    </label>
-                    <input type="number" id="steps" value="252" class="input-field">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Number of Paths
-                    </label>
-                    <input type="number" id="paths" value="5" class="input-field">
-                </div>
+                <h3 class="text-xl font-bold text-gray-900">Path Parameters</h3>
             </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Discretization Scheme
-                </label>
-                <div class="flex gap-4">
-                    <label class="flex items-center">
-                        <input type="radio" name="scheme" value="euler" checked class="mr-2">
-                        Euler-Maruyama
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Initial Price (S₀) <span class="text-gray-400 font-normal">$</span>
                     </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="scheme" value="milstein" class="mr-2">
-                        Milstein
+                    <input type="number" id="S0" value="100" step="0.01" min="0.01" 
+                           class="input-field" placeholder="100.00">
+                    <p class="text-xs text-gray-500 mt-1">Starting stock price</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Drift (μ) <span class="text-gray-400 font-normal">annual</span>
                     </label>
+                    <input type="number" id="mu" value="0.05" step="0.01" min="-1" max="1"
+                           class="input-field" placeholder="0.05">
+                    <p class="text-xs text-gray-500 mt-1">Expected return rate</p>
                 </div>
-            </div>
-
-            <button onclick="generatePaths()" class="btn-primary w-full mb-4" id="generateBtn">
-                Generate Paths
-            </button>
-
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p class="mt-2 text-gray-600">Generating paths...</p>
-            </div>
-
-            <div id="pathStats" class="bg-indigo-50 p-4 rounded-lg space-y-2" style="display: none;">
-                <h3 class="font-bold text-lg mb-2 text-indigo-800">Path Statistics</h3>
-                <div class="text-sm text-gray-600">
-                    <strong>Final Price Mean:</strong> $<span id="finalMean"></span>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Volatility (σ) <span class="text-gray-400 font-normal">annual</span>
+                    </label>
+                    <input type="number" id="sigma" value="0.2" step="0.01" min="0.01" max="5"
+                           class="input-field" placeholder="0.2">
+                    <p class="text-xs text-gray-500 mt-1">Price uncertainty</p>
                 </div>
-                <div class="text-sm text-gray-600">
-                    <strong>Final Price Std Dev:</strong> $<span id="finalStd"></span>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Time Horizon (T) <span class="text-gray-400 font-normal">years</span>
+                    </label>
+                    <input type="number" id="T" value="1" step="0.1" min="0.01" max="10"
+                           class="input-field" placeholder="1.0">
+                    <p class="text-xs text-gray-500 mt-1">Simulation period</p>
                 </div>
-                <div class="text-sm text-gray-600">
-                    <strong>Maximum Price:</strong> $<span id="maxPrice"></span>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Time Steps <span class="text-gray-400 font-normal">#</span>
+                    </label>
+                    <input type="number" id="steps" value="252" step="1" min="10" max="5000"
+                           class="input-field" placeholder="252">
+                    <p class="text-xs text-gray-500 mt-1">Trading days per year</p>
                 </div>
-                <div class="text-sm text-gray-600">
-                    <strong>Minimum Price:</strong> $<span id="minPrice"></span>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Number of Paths <span class="text-gray-400 font-normal">#</span>
+                    </label>
+                    <input type="number" id="paths" value="5" step="1" min="1" max="20"
+                           class="input-field" placeholder="5">
+                    <p class="text-xs text-gray-500 mt-1">Sample trajectories</p>
                 </div>
             </div>
         </div>
 
-        <div>
+        <!-- Scheme Selection -->
+        <div class="card">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Discretization Scheme</h3>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <label class="flex items-start gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-indigo-500 transition">
+                    <input type="radio" name="scheme" value="euler" checked class="w-5 h-5 text-indigo-600 mt-0.5">
+                    <div class="flex-1">
+                        <div class="font-semibold text-gray-900 mb-1">Euler-Maruyama</div>
+                        <div class="text-xs text-gray-600 mb-2">Strong order: 1/2, Weak order: 1</div>
+                        <code class="text-xs bg-gray-100 px-2 py-1 rounded block">Ŝ = Ŝ + μŜh + σŜ√h·Z</code>
+                    </div>
+                </label>
+                <label class="flex items-start gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-indigo-500 transition">
+                    <input type="radio" name="scheme" value="milstein" class="w-5 h-5 text-indigo-600 mt-0.5">
+                    <div class="flex-1">
+                        <div class="font-semibold text-gray-900 mb-1">Milstein</div>
+                        <div class="text-xs text-gray-600 mb-2">Strong order: 1, Weak order: 1</div>
+                        <code class="text-xs bg-gray-100 px-2 py-1 rounded block">+ ½σ²Ŝ(Z²-1)h</code>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-3">
+            <button onclick="generatePaths()" id="generateBtn" 
+                    class="btn-primary w-full text-lg py-4 flex items-center justify-center gap-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Generate Paths
+            </button>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p class="mt-4 text-gray-600 font-medium">Generating price paths...</p>
+            <p class="text-sm text-gray-500 mt-2">Simulating stochastic process</p>
+        </div>
+
+        <!-- Statistics Panel -->
+        <div id="pathStats" class="card bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 hidden">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Path Statistics</h3>
+                <span class="info-badge success-badge">
+                    ✓ Generated
+                </span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-white rounded-xl p-3 shadow-sm">
+                    <div class="text-xs text-gray-600 font-medium mb-1">Final Price Mean</div>
+                    <div class="text-lg font-bold text-blue-600">$<span id="finalMean">-</span></div>
+                </div>
+                <div class="bg-white rounded-xl p-3 shadow-sm">
+                    <div class="text-xs text-gray-600 font-medium mb-1">Final Price Std Dev</div>
+                    <div class="text-lg font-bold text-purple-600">$<span id="finalStd">-</span></div>
+                </div>
+                <div class="bg-white rounded-xl p-3 shadow-sm">
+                    <div class="text-xs text-gray-600 font-medium mb-1">Maximum Price</div>
+                    <div class="text-lg font-bold text-green-600">$<span id="maxPrice">-</span></div>
+                </div>
+                <div class="bg-white rounded-xl p-3 shadow-sm">
+                    <div class="text-xs text-gray-600 font-medium mb-1">Minimum Price</div>
+                    <div class="text-lg font-bold text-red-600">$<span id="minPrice">-</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visualization Panel -->
+    <div class="space-y-6">
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Simulated Price Paths</h3>
+                <span class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-medium" id="schemeLabel">
+                    Euler-Maruyama
+                </span>
+            </div>
             <div id="pathsPlot" style="width: 100%; height: 500px;"></div>
         </div>
     </div>
 </div>
 
-<div class="grid md:grid-cols-2 gap-6">
-    <div class="card bg-yellow-50">
-        <h3 class="text-xl font-bold text-yellow-900 mb-2">Theoretical Background</h3>
-        <p class="text-gray-700 mb-3">
-            <strong>Geometric Brownian Motion:</strong>
-        </p>
-        <p class="font-mono text-sm mb-3">
-            dSₜ = μSₜdt + σSₜdWₜ
-        </p>
+<!-- Theory Section -->
+<div class="grid lg:grid-cols-2 gap-6 mt-6">
+    <div class="card bg-gradient-to-br from-yellow-50 to-orange-50">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center text-white font-bold">
+                📚
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">Theoretical Background</h3>
+        </div>
         
-        <p class="text-gray-700 mb-2">
-            <strong>Euler-Maruyama Scheme:</strong>
-        </p>
-        <p class="font-mono text-xs mb-3">
-            Ŝᵢ₊₁ = Ŝᵢ + μŜᵢh + σŜᵢ√h·Zᵢ
-        </p>
-        <p class="text-sm text-gray-600 mb-3">
-            • Strong order: 1/2<br>
-            • Weak order: 1<br>
-            • Simple implementation
-        </p>
+        <div class="space-y-4">
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Geometric Brownian Motion</p>
+                <code class="text-sm bg-gray-100 px-3 py-2 rounded block mb-2">dSₜ = μSₜdt + σSₜdWₜ</code>
+                <p class="text-sm text-gray-700">
+                    Models asset prices with constant drift and volatility parameters.
+                </p>
+            </div>
+            
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Euler-Maruyama Scheme</p>
+                <code class="text-xs bg-gray-100 px-2 py-2 rounded block mb-2">Ŝᵢ₊₁ = Ŝᵢ + μŜᵢh + σŜᵢ√h·Zᵢ</code>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>• Strong order: 1/2</li>
+                    <li>• Weak order: 1</li>
+                    <li>• Simple implementation</li>
+                    <li>• Universally applicable</li>
+                </ul>
+            </div>
 
-        <p class="text-gray-700 mb-2">
-            <strong>Milstein Scheme:</strong>
-        </p>
-        <p class="font-mono text-xs mb-3">
-            Ŝᵢ₊₁ = Ŝᵢ + μŜᵢh + σŜᵢ√h·Zᵢ + ½σ²Ŝᵢ((Zᵢ)² - 1)h
-        </p>
-        <p class="text-sm text-gray-600">
-            • Strong order: 1<br>
-            • Weak order: 1<br>
-            • Higher accuracy for same step size
-        </p>
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Milstein Scheme</p>
+                <code class="text-xs bg-gray-100 px-2 py-2 rounded block mb-2">Ŝᵢ₊₁ = Ŝᵢ + μŜᵢh + σŜᵢ√h·Zᵢ + ½σ²Ŝᵢ(Zᵢ²-1)h</code>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>• Strong order: 1</li>
+                    <li>• Weak order: 1</li>
+                    <li>• Higher accuracy</li>
+                    <li>• Includes Itô correction term</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
-    <div class="card bg-blue-50">
-        <h3 class="text-xl font-bold text-blue-900 mb-2">Convergence Properties</h3>
+    <div class="card bg-gradient-to-br from-blue-50 to-cyan-50">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white font-bold">
+                🎯
+            </div>
+            <h3 class="text-xl font-bold text-gray-900">Convergence Properties</h3>
+        </div>
         
-        <div class="mb-4">
-            <p class="font-semibold text-blue-800 mb-2">Strong Convergence</p>
-            <p class="text-sm text-gray-700 mb-2">
-                E[|Ŝ - S|] ≤ Chᵞ
-            </p>
-            <ul class="text-sm text-gray-600 list-disc ml-5">
-                <li>Measures path-wise accuracy</li>
-                <li>Euler: γ = 1/2</li>
-                <li>Milstein: γ = 1</li>
-            </ul>
-        </div>
+        <div class="space-y-4">
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Strong Convergence</p>
+                <code class="text-sm bg-gray-100 px-3 py-2 rounded block mb-2">E[|Ŝ - S|] ≤ Chᵞ</code>
+                <p class="text-sm text-gray-700 mb-2">Measures path-wise accuracy:</p>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>• Euler: γ = 1/2</li>
+                    <li>• Milstein: γ = 1</li>
+                </ul>
+            </div>
 
-        <div>
-            <p class="font-semibold text-blue-800 mb-2">Weak Convergence</p>
-            <p class="text-sm text-gray-700 mb-2">
-                |E[f(Ŝ)] - E[f(S)]| ≤ Chᵞ
-            </p>
-            <ul class="text-sm text-gray-600 list-disc ml-5">
-                <li>Measures distribution accuracy</li>
-                <li>Important for option pricing</li>
-                <li>Both schemes: γ = 1</li>
-            </ul>
-        </div>
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Weak Convergence</p>
+                <code class="text-sm bg-gray-100 px-3 py-2 rounded block mb-2">|E[f(Ŝ)] - E[f(S)]| ≤ Chᵞ</code>
+                <p class="text-sm text-gray-700 mb-2">Measures distribution accuracy:</p>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>• Important for option pricing</li>
+                    <li>• Both schemes: γ = 1</li>
+                    <li>• Sufficient for expectations</li>
+                </ul>
+            </div>
 
-        <div class="mt-4 p-3 bg-blue-100 rounded">
+            <div class="bg-white rounded-lg p-4">
+                <p class="font-semibold text-gray-900 mb-2">Exact Simulation Methods</p>
+                <p class="text-sm text-gray-700 mb-2">
+                    Advanced acceptance-rejection sampling eliminates discretization bias using Brownian bridge construction.
+                </p>
+                <p class="text-xs text-gray-500">
+                    Based on Beskos and Roberts (2005) exact simulation methodology
+                </p>
+            </div>
+        </div>
+        
+        <div class="mt-4 p-3 bg-blue-100 rounded-lg">
             <p class="text-sm text-blue-800 font-semibold">Reference:</p>
             <p class="text-xs text-blue-700">
                 Chen, N., & Hong, L. J. (2008). Monte Carlo simulation in financial engineering. 
                 <em>Proceedings of the 2007 Winter Simulation Conference</em>.
-            </p>
-        </div>
-    </div>
-</div>
-
-<div class="card bg-green-50">
-    <h3 class="text-xl font-bold text-green-900 mb-3">Exact Simulation Methods</h3>
-    
-    <div class="grid md:grid-cols-2 gap-4">
-        <div>
-            <p class="font-semibold text-green-800 mb-2">Acceptance-Rejection Sampling</p>
-            <p class="text-sm text-gray-700 mb-2">
-                Advanced method to generate exact samples from SDE solutions without discretization error.
-            </p>
-            <ul class="text-sm text-gray-600 list-disc ml-5">
-                <li>Uses Brownian bridge construction</li>
-                <li>Eliminates discretization bias</li>
-                <li>Computationally intensive</li>
-                <li>Requires bounded drift conditions</li>
-            </ul>
-        </div>
-        
-        <div>
-            <p class="font-semibold text-green-800 mb-2">Key Steps:</p>
-            <ol class="text-sm text-gray-600 list-decimal ml-5">
-                <li>Transform SDE to unit volatility</li>
-                <li>Apply Girsanov theorem</li>
-                <li>Use Poisson process for acceptance</li>
-                <li>Simulate Brownian bridges</li>
-            </ol>
-            <p class="text-xs text-gray-500 mt-2">
-                Based on Beskos and Roberts (2005) exact simulation methodology
             </p>
         </div>
     </div>
@@ -218,10 +285,14 @@ async function generatePaths() {
         scheme: document.querySelector('input[name="scheme"]:checked').value
     };
     
+    // Update scheme label
+    const schemeLabel = document.getElementById('schemeLabel');
+    schemeLabel.textContent = params.scheme === 'euler' ? 'Euler-Maruyama' : 'Milstein';
+    
     const generateBtn = document.getElementById('generateBtn');
     generateBtn.disabled = true;
     showLoading('loading');
-    document.getElementById('pathStats').style.display = 'none';
+    document.getElementById('pathStats').classList.add('hidden');
     
     try {
         const response = await fetch('/api/generate-paths', {
@@ -264,7 +335,7 @@ async function generatePaths() {
         document.getElementById('finalStd').textContent = finalStd.toFixed(2);
         document.getElementById('maxPrice').textContent = maxPrice.toFixed(2);
         document.getElementById('minPrice').textContent = minPrice.toFixed(2);
-        document.getElementById('pathStats').style.display = 'block';
+        document.getElementById('pathStats').classList.remove('hidden');
         
         // Create path visualization
         const traces = [];
@@ -277,31 +348,37 @@ async function generatePaths() {
                 type: 'scatter',
                 mode: 'lines',
                 name: `Path ${parseInt(pathNum) + 1}`,
-                line: { color: colors[index % colors.length], width: 2 }
+                line: { color: colors[index % colors.length], width: 2.5 }
             };
             traces.push(trace);
         });
         
         const layout = {
-            title: `Simulated Price Paths (${params.scheme.toUpperCase()} Scheme)`,
+            title: {
+                text: `Simulated Price Paths (${params.scheme.toUpperCase()} Scheme)`,
+                font: { size: 16, weight: 'bold' }
+            },
             xaxis: {
-                title: 'Time',
-                gridcolor: '#e5e7eb'
+                title: 'Time (years)',
+                gridcolor: '#f3f4f6'
             },
             yaxis: {
-                title: 'Price',
-                gridcolor: '#e5e7eb'
+                title: 'Price ($)',
+                gridcolor: '#f3f4f6'
             },
-            plot_bgcolor: '#f8fafc',
-            paper_bgcolor: '#f8fafc',
+            plot_bgcolor: '#fafafa',
+            paper_bgcolor: 'white',
             showlegend: true,
             legend: {
                 orientation: 'h',
-                y: -0.2
-            }
+                y: -0.15,
+                x: 0.5,
+                xanchor: 'center'
+            },
+            margin: { l: 60, r: 30, t: 60, b: 80 }
         };
         
-        Plotly.newPlot('pathsPlot', traces, layout);
+        Plotly.newPlot('pathsPlot', traces, layout, {responsive: true});
         
     } catch (error) {
         showError(error.message);
