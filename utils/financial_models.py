@@ -51,99 +51,161 @@ class OptionPricer:
             'min_payoff': np.min(payoffs),
             'max_payoff': np.max(payoffs)
         }
-    
     @staticmethod
-    def american_longstaff_schwartz(S0: float, K: float, T: float, r: float,
-                                   sigma: float, steps: int, n_paths: int,
-                                   option_type: str = 'put') -> Dict:
+    def american_longstaff_schwartz(
+        S0: float, K: float, T: float, r: float, sigma: float, 
+        steps: int, n_paths: int, option_type: str = 'put'
+    ) -> Dict:
         """
-        American option pricing using Longstaff-Schwartz LSM algorithm
+        Fixed Longstaff-Schwartz method for American option pricing
         """
         dt = T / steps
         discount = np.exp(-r * dt)
         
-        # Generate paths
+        # Set seed for reproducibility
+        np.random.seed(42)
+        
+        # Generate all paths
+        Z = np.random.normal(0, 1, (n_paths, steps))
         paths = np.zeros((n_paths, steps + 1))
         paths[:, 0] = S0
         
         for t in range(1, steps + 1):
-            Z = np.random.randn(n_paths)
-            paths[:, t] = paths[:, t-1] * np.exp((r - 0.5 * sigma**2) * dt + 
-                                                  sigma * np.sqrt(dt) * Z)
+            paths[:, t] = paths[:, t - 1] * np.exp(
+                (r - 0.5 * sigma**2) * dt + sigma * np.sqrt(dt) * Z[:, t - 1]
+            )
         
-        # Calculate payoffs
+        # Initialize cash flow matrix
+        cash_flows = np.zeros((n_paths, steps + 1))
+        
+        # At maturity
         if option_type == 'call':
-            payoff_matrix = np.maximum(paths - K, 0)
-        else:
-            payoff_matrix = np.maximum(K - paths, 0)
-        
-        # Initialize value matrix
-        value = payoff_matrix[:, -1].copy()
+            cash_flows[:, -1] = np.maximum(paths[:, -1] - K, 0)
+        else:  # put
+            cash_flows[:, -1] = np.maximum(K - paths[:, -1], 0)
         
         # Backward induction
-        exercise_times = np.full(n_paths, steps)
+        exercise_times = np.full(n_paths, steps)  # Track when each path exercises
         
         for t in range(steps - 1, 0, -1):
-            # Identify in-the-money paths
-            itm = payoff_matrix[:, t] > 0
+            # Find in-the-money paths
+            if option_type == 'call':
+                intrinsic_value = np.maximum(paths[:, t] - K, 0)
+            else:
+                intrinsic_value = np.maximum(K - paths[:, t], 0)
             
-            if np.sum(itm) == 0:
-                value = value * discount
-                continue
+            in_money = intrinsic_value > 0
             
-            # Regression on in-the-money paths
-            X = paths[itm, t]
-            Y = value[itm] * discount
-            
-            # Basis functions: 1, S, S^2
-            A = np.column_stack([np.ones_like(X), X, X**2])
-            
-            try:
-                beta = np.linalg.lstsq(A, Y, rcond=None)[0]
-                continuation_value = A @ beta
-            except:
-                continuation_value = np.mean(Y) * np.ones_like(X)
-            
-            # Exercise decision
-            exercise = payoff_matrix[itm, t] > continuation_value
-            
-            # Update values and exercise times
-            value_itm = value[itm].copy()
-            value_itm[exercise] = payoff_matrix[itm, t][exercise]
-            value[itm] = value_itm
-            
-            exercise_times[itm & (payoff_matrix[:, t] > continuation_value)] = t
-            
-            # Discount continuation values
-            value[~itm] *= discount
+            if np.sum(in_money) > 10:  # Need enough points for regression
+                # Discounted future cash flows
+                continuation_value = cash_flows[:, t + 1] * discount
+                
+                # Regression on basis functions
+                X = paths[in_money, t]
+                Y = continuation_value[in_money]
+                
+                # Basis functions: 1, X, X^2
+                X_basis = np.column_stack([
+                    np.ones_like(X),
+                    X,
+                    X**2
+                ])
+                
+                try:
+                    # Solve least squares
+                    beta = np.linalg.lstsq(X_basis, Y, rcond=None)[0]
+                    estimated_continuation = X_basis @ beta
+                    
+                    # Compare with intrinsic value
+                    exercise_indices = np.where(in_money)[0]
+                    for idx, path_idx in enumerate(exercise_indices):
+                        if intrinsic_value[path_idx] > estimated_continuation[idx]:
+                            # Early exercise
+                            cash_flows[path_idx, t] = intrinsic_value[path_idx]
+                            cash_flows[path_idx, t + 1:] = 0  # Zero out future cash flows
+                            exercise_times[path_idx] = t
+                except:
+                    # If regression fails, use simple comparison
+                    for path_idx in range(n_paths):
+                        if in_money[path_idx] and intrinsic_value[path_idx] > continuation_value[path_idx]:
+                            cash_flows[path_idx, t] = intrinsic_value[path_idx]
+                            cash_flows[path_idx, t + 1:] = 0
+                            exercise_times[path_idx] = t
         
-        # Calculate price
-        price = np.mean(value) * discount
+        # Calculate option price as discounted expected cash flow
+        option_price = 0
+        for path_idx in range(n_paths):
+            exercise_time = exercise_times[path_idx]
+            cash_flow = cash_flows[path_idx, exercise_time]
+            discount_factor = np.exp(-r * exercise_time * dt)
+            option_price += cash_flow * discount_factor
         
-        # European price for comparison
-        european_payoffs = payoff_matrix[:, -1]
-        european_price = np.exp(-r * T) * np.mean(european_payoffs)
+        option_price /= n_paths
         
-        # Exercise boundary approximation
-        exercise_boundary = []
-        for t in range(1, steps + 1):
-            exercised_at_t = exercise_times == t
-            if np.any(exercised_at_t):
-                exercise_boundary.append({
-                    'time': t * dt,
-                    'mean_price': np.mean(paths[exercised_at_t, t]),
-                    'count': np.sum(exercised_at_t)
+        # Calculate European price for comparison
+        european_payoffs = cash_flows[:, -1]
+        european_price = np.mean(european_payoffs) * np.exp(-r * T)
+        
+        # Calculate early exercise premium
+        early_exercise_premium = option_price - european_price
+        
+        # Calculate average exercise time (only for paths exercised before maturity)
+        early_exercise_indices = exercise_times[exercise_times < steps]
+        avg_exercise_time = np.mean(early_exercise_indices) * dt if len(early_exercise_indices) > 0 else T
+        
+        # Calculate standard error using batch means
+        n_batches = min(20, n_paths // 100)
+        if n_batches > 1:
+            batch_size = n_paths // n_batches
+            batch_prices = []
+            
+            for batch in range(n_batches):
+                start_idx = batch * batch_size
+                end_idx = start_idx + batch_size if batch < n_batches - 1 else n_paths
+                
+                batch_price = 0
+                for path_idx in range(start_idx, end_idx):
+                    exercise_time = exercise_times[path_idx]
+                    cash_flow = cash_flows[path_idx, exercise_time]
+                    discount_factor = np.exp(-r * exercise_time * dt)
+                    batch_price += cash_flow * discount_factor
+                
+                batch_prices.append(batch_price / (end_idx - start_idx))
+            
+            std_error = np.std(batch_prices) / np.sqrt(n_batches)
+        else:
+            std_error = 0.0
+        
+        # Prepare sample paths for visualization (max 10)
+        # FIX: Convert all values to native Python types for JSON serialization
+        sample_paths = []
+        n_sample = min(10, n_paths)
+        for i in range(n_sample):
+            path_data = []
+            for t in range(steps + 1):
+                path_data.append({
+                    'time': float(t * dt),
+                    'price': float(paths[i, t])
+                    # Removed 'exercised' field - no longer needed
                 })
+            sample_paths.append(path_data)
+        
+        # Calculate early exercise rate
+        early_exercise_rate = float(np.sum(exercise_times < steps)) / n_paths
+        exercise_count = int(np.sum(exercise_times < steps))
         
         return {
-            'american_price': price,
-            'european_price': european_price,
-            'early_exercise_premium': price - european_price,
-            'std_error': np.std(value) / np.sqrt(n_paths),
-            'exercise_boundary': exercise_boundary,
-            'avg_exercise_time': np.mean(exercise_times) * dt,
-            'paths': paths[:min(10, n_paths), :].tolist()  # Sample paths
+            'americanPrice': float(option_price),
+            'europeanPrice': float(european_price),
+            'earlyExercisePremium': float(early_exercise_premium),
+            'avgExerciseTime': float(avg_exercise_time),
+            'stdError': float(std_error),
+            'paths': sample_paths,
+            'earlyExerciseRate': float(early_exercise_rate),
+            'exerciseCount': exercise_count,
+            'success': True
         }
+
     
     @staticmethod
     def asian_option(S0: float, K: float, T: float, r: float, sigma: float,

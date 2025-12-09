@@ -333,6 +333,7 @@
 let currentResults = null;
 
 async function priceAmericanOption() {
+    // Get parameters from form
     const params = {
         S0: parseFloat(document.getElementById('S0').value),
         K: parseFloat(document.getElementById('K').value),
@@ -345,76 +346,318 @@ async function priceAmericanOption() {
     };
     
     // Validation
-    if (params.S0 <= 0 || params.K <= 0 || params.T <= 0 || params.sigma <= 0) {
-        showToast('All parameters must be positive', 'error');
+    const errors = [];
+    if (params.S0 <= 0) errors.push('Initial price must be positive');
+    if (params.K <= 0) errors.push('Strike price must be positive');
+    if (params.T <= 0) errors.push('Time to maturity must be positive');
+    if (params.sigma <= 0) errors.push('Volatility must be positive');
+    if (params.steps < 10) errors.push('Minimum 10 time steps required');
+    if (params.simulations < 1000) errors.push('Minimum 1000 simulations required');
+    
+    if (errors.length > 0) {
+        showToast(errors.join(', '), 'error');
         return;
     }
     
-    if (params.steps < 10) {
-        showToast('Minimum 10 time steps required for accuracy', 'warning');
-    }
-    
+    // Disable buttons and show loading
     const priceBtn = document.getElementById('priceBtn');
     const exportBtn = document.getElementById('exportBtn');
     
     priceBtn.disabled = true;
     exportBtn.disabled = true;
-    showLoading('loading');
+    document.getElementById('loading').classList.remove('hidden');
     document.getElementById('results').classList.add('hidden');
     
     try {
+        // Call the API
         const response = await fetch('/api/price-american-option', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify(params)
         });
         
-        if (!response.ok) throw new Error('Server error');
-        
         const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Calculation failed');
+        }
+        
         currentResults = data;
         
-        // Update results
+        // Update results display
         document.getElementById('americanPrice').textContent = '$' + data.americanPrice.toFixed(4);
         document.getElementById('europeanPrice').textContent = '$' + data.europeanPrice.toFixed(4);
         document.getElementById('earlyExercisePremium').textContent = '$' + data.earlyExercisePremium.toFixed(4);
         document.getElementById('avgExerciseTime').textContent = data.avgExerciseTime.toFixed(3) + ' years';
         document.getElementById('stdError').textContent = '$' + data.stdError.toFixed(4);
         
-        // Exercise boundary info
-        if (data.exerciseBoundary && data.exerciseBoundary.length > 0) {
-            let boundaryHtml = '<div class="space-y-2">';
-            boundaryHtml += '<p class="font-medium mb-2">Early Exercise Opportunities:</p>';
-            boundaryHtml += '<div class="grid grid-cols-3 gap-2 text-xs">';
-            data.exerciseBoundary.slice(0, 9).forEach(point => {
-                boundaryHtml += `
-                    <div class="bg-gray-50 p-2 rounded">
-                        <div class="font-semibold">t = ${point.time.toFixed(2)}y</div>
-                        <div class="text-gray-600">S̄ = $${point.mean_price.toFixed(2)}</div>
-                        <div class="text-gray-500">${point.count} paths</div>
+        // Update exercise boundary info
+        const exerciseBoundaryCard = document.getElementById('exerciseBoundaryCard');
+        const exerciseBoundaryInfo = document.getElementById('exerciseBoundaryInfo');
+        
+        if (data.exerciseCount > 0) {
+            exerciseBoundaryCard.classList.remove('hidden');
+            exerciseBoundaryInfo.innerHTML = `
+                <div class="space-y-2">
+                    <p class="font-medium">Early Exercise Statistics:</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-blue-50 p-3 rounded-lg">
+                            <div class="text-sm text-blue-700">Paths Exercised Early</div>
+                            <div class="text-2xl font-bold text-blue-800">${data.exerciseCount}</div>
+                        </div>
+                        <div class="bg-green-50 p-3 rounded-lg">
+                            <div class="text-sm text-green-700">Early Exercise Rate</div>
+                            <div class="text-2xl font-bold text-green-800">${(data.earlyExerciseRate * 100).toFixed(1)}%</div>
+                        </div>
                     </div>
-                `;
-            });
-            boundaryHtml += '</div></div>';
-            document.getElementById('exerciseBoundaryInfo').innerHTML = boundaryHtml;
+                    <p class="text-sm text-gray-600 mt-2">
+                        Average exercise time: <strong>${data.avgExerciseTime.toFixed(3)} years</strong>
+                    </p>
+                </div>
+            `;
+        } else {
+            exerciseBoundaryCard.classList.add('hidden');
         }
         
-        // Show results
+        // Show results and enable export
         document.getElementById('results').classList.remove('hidden');
         exportBtn.disabled = false;
         
         // Plot sample paths
-        plotSamplePaths(data.paths, params.K, params.T);
+        if (data.paths && data.paths.length > 0) {
+            plotSamplePaths(data.paths, params.K, params.T);
+        }
         
-        showToast('American option pricing completed!', 'success');
+        showToast('American option pricing completed successfully!', 'success');
         
     } catch (error) {
+        console.error('American option pricing error:', error);
         showToast('Calculation failed: ' + error.message, 'error');
-        console.error(error);
     } finally {
-        hideLoading('loading');
+        // Re-enable button and hide loading
         priceBtn.disabled = false;
+        document.getElementById('loading').classList.add('hidden');
     }
+}
+function showToast(message, type = 'info') {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white ${
+        type === 'error' ? 'bg-red-500' : 
+        type === 'success' ? 'bg-green-500' : 
+        type === 'warning' ? 'bg-yellow-500' : 
+        'bg-blue-500'
+    }`;
+    toast.textContent = message;
+    toast.style.animation = 'slideIn 0.3s ease-out';
+    
+    document.body.appendChild(toast);
+    
+    // Remove toast after 5 seconds
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                document.body.removeChild(toast);
+            }
+        }, 300);
+    }, 5000);
+}
+function plotSamplePaths(paths, strike, T) {
+    const plotDiv = document.getElementById('plot');
+    
+    if (!paths || paths.length === 0) {
+        plotDiv.innerHTML = '<div class="text-center py-20 text-gray-500"><p>No path data available for plotting</p></div>';
+        return;
+    }
+    
+    // Clear any existing plot
+    Plotly.purge(plotDiv);
+    
+    // Prepare traces
+    const traces = [];
+    
+    // Add price paths
+    paths.forEach((path, idx) => {
+        const x = path.map(p => p.time);
+        const y = path.map(p => p.price);
+        
+        traces.push({
+            x: x,
+            y: y,
+            type: 'scatter',
+            mode: 'lines',
+            name: `Path ${idx + 1}`,
+            line: { width: 1.5, opacity: 0.7 },
+            hovertemplate: 'Time: %{x:.3f} years<br>Price: $%{y:.2f}<extra></extra>'
+        });
+    });
+    
+    // Add strike price line
+    traces.push({
+        x: [0, T],
+        y: [strike, strike],
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Strike Price',
+        line: { color: 'red', width: 2, dash: 'dash' }
+    });
+    
+    // Add initial price line
+    const initialPrice = paths[0] ? paths[0][0]?.price : strike;
+    traces.push({
+        x: [0, T],
+        y: [initialPrice, initialPrice],
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Initial Price',
+        line: { color: 'green', width: 2, dash: 'dot' }
+    });
+    
+    // Layout configuration
+    const layout = {
+        title: {
+            text: 'Sample Price Paths',
+            font: { size: 16, family: 'Arial, sans-serif' }
+        },
+        xaxis: { 
+            title: { text: 'Time (years)', font: { size: 14 } },
+            gridcolor: '#f0f0f0',
+            showgrid: true,
+            zeroline: false
+        },
+        yaxis: { 
+            title: { text: 'Stock Price ($)', font: { size: 14 } },
+            gridcolor: '#f0f0f0',
+            showgrid: true
+        },
+        plot_bgcolor: '#ffffff',
+        paper_bgcolor: '#ffffff',
+        showlegend: true,
+        legend: { 
+            x: 1.02, 
+            y: 1,
+            bgcolor: 'rgba(255, 255, 255, 0.8)',
+            bordercolor: '#ddd',
+            borderwidth: 1
+        },
+        margin: { l: 60, r: 100, t: 60, b: 60 },
+        hovermode: 'closest'
+    };
+    
+    // Plot configuration
+    const config = {
+        responsive: true,
+        displayModeBar: true,
+        modeBarButtonsToRemove: ['lasso2d', 'select2d'],
+        displaylogo: false
+    };
+    
+    // Create the plot
+    Plotly.newPlot(plotDiv, traces, layout, config);
+}
+function exportResults() {
+    if (!currentResults) {
+        showToast('No results to export', 'warning');
+        return;
+    }
+    
+    try {
+        // Create CSV content
+        let csvContent = 'American Option Pricing Results\n\n';
+        csvContent += 'Parameter,Value\n';
+        csvContent += `American Option Price,${currentResults.americanPrice.toFixed(4)}\n`;
+        csvContent += `European Option Price,${currentResults.europeanPrice.toFixed(4)}\n`;
+        csvContent += `Early Exercise Premium,${currentResults.earlyExercisePremium.toFixed(4)}\n`;
+        csvContent += `Average Exercise Time,${currentResults.avgExerciseTime.toFixed(3)} years\n`;
+        csvContent += `Standard Error,${currentResults.stdError.toFixed(4)}\n`;
+        csvContent += `Early Exercise Rate,${(currentResults.earlyExerciseRate * 100).toFixed(2)}%\n`;
+        csvContent += `Paths Exercised Early,${currentResults.exerciseCount || 0}\n\n`;
+        
+        // Add sample paths if available
+        if (currentResults.paths && currentResults.paths.length > 0) {
+            csvContent += 'Sample Paths\n';
+            csvContent += 'Path,Time,Price\n';
+            currentResults.paths.forEach((path, pathIdx) => {
+                path.forEach(point => {
+                    csvContent += `${pathIdx + 1},${point.time},${point.price}\n`;
+                });
+            });
+        }
+        
+        // Create blob and download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `american_option_results_${new Date().toISOString().slice(0,10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        showToast('Results exported successfully!', 'success');
+    } catch (error) {
+        console.error('Export error:', error);
+        showToast('Export failed: ' + error.message, 'error');
+    }
+}
+function plotSamplePaths(paths, strike, T) {
+    if (!paths || paths.length === 0) {
+        document.getElementById('plot').innerHTML = '<p class="text-center text-gray-500 py-20">No path data available</p>';
+        return;
+    }
+    
+    const traces = paths.map((path, idx) => {
+        const x = path.map(p => p.time);
+        const y = path.map(p => p.price);
+        const exercised = path.find(p => p.exercised);
+        
+        return {
+            x: x,
+            y: y,
+            type: 'scatter',
+            mode: 'lines',
+            name: `Path ${idx + 1}`,
+            line: { width: 2 },
+            hovertemplate: 'Time: %{x:.2f}y<br>Price: $%{y:.2f}<extra></extra>'
+        };
+    });
+    
+    // Add strike price line
+    traces.push({
+        x: [0, T],
+        y: [strike, strike],
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Strike Price',
+        line: { color: 'red', width: 2, dash: 'dash' }
+    });
+    
+    const layout = {
+        title: {
+            text: 'Sample Price Paths with Early Exercise Points',
+            font: { size: 18, weight: 'bold' }
+        },
+        xaxis: { 
+            title: 'Time (years)',
+            gridcolor: '#f3f4f6'
+        },
+        yaxis: { 
+            title: 'Stock Price ($)',
+            gridcolor: '#f3f4f6'
+        },
+        plot_bgcolor: '#fafafa',
+        paper_bgcolor: 'white',
+        showlegend: true,
+        legend: { x: 1.05, y: 1 },
+        margin: { l: 60, r: 150, t: 60, b: 60 }
+    };
+    
+    Plotly.newPlot('plot', traces, layout, {responsive: true});
 }
 
 function plotSamplePaths(paths, strike, T) {

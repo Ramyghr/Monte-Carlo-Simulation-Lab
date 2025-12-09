@@ -4,6 +4,7 @@ from scipy.stats import norm
 from scipy.linalg import cholesky
 import json
 import uuid
+from typing import Dict, List, Tuple
 from utils.monte_carlo import (VarianceReduction, ConvergenceAnalyzer, 
                                StochasticProcesses, PerformanceTracker,
                                black_scholes_formula, generate_correlated_returns,
@@ -306,37 +307,6 @@ def generate_paths_advanced():
         return jsonify({'error': str(e), 'traceback': traceback.format_exc(), 'success': False}), 400
 
 
-# ==================== ENHANCED AMERICAN OPTIONS ====================
-
-@app.route('/api/american-option-enhanced', methods=['POST'])
-def american_option_enhanced():
-    """Enhanced American option pricing with exercise boundary"""
-    try:
-        data = request.json
-        S0 = float(data['S0'])
-        K = float(data['K'])
-        T = float(data['T'])
-        r = float(data['r'])
-        sigma = float(data['sigma'])
-        steps = int(data.get('steps', 50))
-        n_paths = int(data.get('simulations', 5000))
-        option_type = data.get('optionType', 'put')
-        
-        # Price using Longstaff-Schwartz
-        result = OptionPricer.american_longstaff_schwartz(
-            S0, K, T, r, sigma, steps, n_paths, option_type
-        )
-        
-        return jsonify({
-            **result,
-            'success': True
-        })
-        
-    except Exception as e:
-        import traceback
-        return jsonify({'error': str(e), 'traceback': traceback.format_exc(), 'success': False}), 400
-
-
 # ==================== PORTFOLIO VAR ENHANCED ====================
 
 @app.route('/api/portfolio-var-enhanced', methods=['POST'])
@@ -559,89 +529,56 @@ def american_options():
     return render_template('american_options.html')
 
 @app.route('/api/price-american-option', methods=['POST'])
-def price_american_option():
-    data = request.json
-    S0 = float(data['S0'])
-    K = float(data['K'])
-    T = float(data['T'])
-    r = float(data['r'])
-    sigma = float(data['sigma'])
-    steps = int(data['steps'])
-    simulations = int(data['simulations'])
-    option_type = data['optionType']
-    
-    dt = T / steps
-    
-    # Generate all paths
-    paths = []
-    for _ in range(simulations):
-        path = [S0]
-        S = S0
-        for _ in range(steps):
-            z = box_muller_transform()
-            S = S * np.exp((r - 0.5 * sigma**2) * dt + sigma * np.sqrt(dt) * z)
-            path.append(S)
-        paths.append(path)
-    
-    # Calculate exercise values
-    exercise_values = []
-    for path in paths:
-        if option_type == 'call':
-            exercise_values.append([max(S - K, 0) for S in path])
-        else:
-            exercise_values.append([max(K - S, 0) for S in path])
-    
-    # Longstaff-Schwartz backward induction
-    cashflows = [ev[-1] for ev in exercise_values]
-    
-    for t in range(steps - 1, 0, -1):
-        in_money = []
-        X = []
-        Y = []
+def price_american_option_fixed():
+    """Fixed American option pricing endpoint"""
+    try:
+        data = request.json
         
-        for i in range(simulations):
-            if exercise_values[i][t] > 0:
-                in_money.append(i)
-                S = paths[i][t]
-                X.append([1, S, S**2])
-                Y.append(cashflows[i] * np.exp(-r * dt))
+        # Validate required parameters
+        required_params = ['S0', 'K', 'T', 'r', 'sigma', 'steps', 'simulations', 'optionType']
+        for param in required_params:
+            if param not in data:
+                return jsonify({'error': f'Missing parameter: {param}', 'success': False}), 400
         
-        if len(in_money) > 0:
-            X = np.array(X)
-            Y = np.array(Y)
-            beta = np.linalg.lstsq(X, Y, rcond=None)[0]
-            
-            for idx, i in enumerate(in_money):
-                S = paths[i][t]
-                continuation = beta[0] + beta[1] * S + beta[2] * S**2
-                
-                if exercise_values[i][t] > continuation:
-                    cashflows[i] = exercise_values[i][t]
-    
-    american_price = np.mean(cashflows) * np.exp(-r * dt)
-    
-    # European price for comparison
-    european_payoffs = []
-    for path in paths:
-        if option_type == 'call':
-            european_payoffs.append(max(path[-1] - K, 0))
-        else:
-            european_payoffs.append(max(K - path[-1], 0))
-    
-    european_price = np.exp(-r * T) * np.mean(european_payoffs)
-    
-    # Sample paths for visualization
-    sample_paths = []
-    for i in range(min(5, simulations)):
-        path_data = [{'time': j, 'price': paths[i][j], 'path': i} for j in range(len(paths[i]))]
-        sample_paths.append(path_data)
-    
-    return jsonify({
-        'americanPrice': american_price,
-        'europeanPrice': european_price,
-        'earlyExercisePremium': american_price - european_price,
-        'paths': sample_paths
-    })
+        # Extract and validate parameters
+        S0 = float(data['S0'])
+        K = float(data['K'])
+        T = float(data['T'])
+        r = float(data['r'])
+        sigma = float(data['sigma'])
+        steps = int(data['steps'])
+        simulations = int(data['simulations'])
+        option_type = data['optionType']
+        
+        # Validate parameters
+        if S0 <= 0 or K <= 0 or T <= 0 or sigma <= 0:
+            return jsonify({'error': 'All parameters must be positive', 'success': False}), 400
+        
+        if simulations < 1000:
+            return jsonify({'error': 'Minimum 1000 simulations required', 'success': False}), 400
+        
+        # Price using Longstaff-Schwartz
+        result = OptionPricer.american_longstaff_schwartz(
+            S0=S0, K=K, T=T, r=r, sigma=sigma,
+            steps=steps, n_paths=simulations, option_type=option_type
+        )
+        
+        return jsonify({
+            'success': True,
+            **result
+        })
+        
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error in american option pricing: {str(e)}")
+        print(f"Traceback: {error_trace}")
+        
+        return jsonify({
+            'error': str(e),
+            'traceback': error_trace,
+            'success': False
+        }), 500
 
 @app.route('/greeks')
 def greeks():
@@ -1229,75 +1166,89 @@ def convergence_analysis():
 
 @app.route('/api/analyze-convergence', methods=['POST'])
 def analyze_convergence():
-    data = request.json
-    S0 = float(data['S0'])
-    K = float(data['K'])
-    T = float(data['T'])
-    r = float(data['r'])
-    sigma = float(data['sigma'])
-    max_simulations = int(data['maxSimulations'])
-    option_type = data.get('optionType', 'call')  # Get option type from request
-    
-    # Generate logarithmic range of simulation sizes
-    simulation_sizes = []
-    n = 100
-    while n <= max_simulations:
-        simulation_sizes.append(n)
-        n = int(n * 2)  # Double each time for logarithmic spacing
-    
-    # Ensure we include the max_simulations
-    if max_simulations not in simulation_sizes:
-        simulation_sizes.append(max_simulations)
-    
-    # Calculate Black-Scholes price for the correct option type
-    bs_price = black_scholes_price(S0, K, T, r, sigma, option_type)
-    
-    results = []
-    
-    for n in simulation_sizes:
-        errors = []
-        mc_prices = []
+    try:
+        data = request.json
+        S0 = float(data['S0'])
+        K = float(data['K'])
+        T = float(data['T'])
+        r = float(data['r'])
+        sigma = float(data['sigma'])
+        max_simulations = int(data['maxSimulations'])
+        option_type = data.get('optionType', 'call')
         
-        # Run multiple trials for better statistics
-        trials = min(20, max(5, 100000 // n))  # More trials for smaller n
+        # Generate logarithmic range of simulation sizes
+        simulation_sizes = []
+        n = 100
+        while n <= max_simulations:
+            simulation_sizes.append(n)
+            n = int(n * 2)
         
-        for trial in range(trials):
-            payoffs = []
-            for _ in range(n):
-                z = box_muller_transform()
-                ST = S0 * np.exp((r - 0.5 * sigma**2) * T + sigma * np.sqrt(T) * z)
-                
-                if option_type == 'call':
-                    payoff = max(ST - K, 0)
-                else:  # put option
-                    payoff = max(K - ST, 0)
-                    
-                payoffs.append(payoff)
+        if max_simulations not in simulation_sizes:
+            simulation_sizes.append(max_simulations)
+        
+        # Calculate Black-Scholes price
+        bs_price = black_scholes_price(S0, K, T, r, sigma, option_type)
+        
+        results = []
+        
+        for n in simulation_sizes:
+            errors = []
+            mc_prices = []
+            all_payoffs = []
             
-            mc_price = np.exp(-r * T) * np.mean(payoffs)
-            mc_prices.append(mc_price)
-            error = abs(mc_price - bs_price)
-            errors.append(error)
+            # Run multiple trials
+            trials = min(20, max(5, 100000 // n))
+            
+            for trial in range(trials):
+                payoffs = []
+                for _ in range(n):
+                    z = box_muller_transform()
+                    ST = S0 * np.exp((r - 0.5 * sigma**2) * T + sigma * np.sqrt(T) * z)
+                    
+                    if option_type == 'call':
+                        payoff = max(ST - K, 0)
+                    else:
+                        payoff = max(K - ST, 0)
+                        
+                    payoffs.append(payoff)
+                
+                mc_price = np.exp(-r * T) * np.mean(payoffs)
+                mc_prices.append(mc_price)
+                error = abs(mc_price - bs_price)
+                errors.append(error)
+                all_payoffs.extend(payoffs)
+            
+            # Calculate statistics
+            mean_mc_price = np.mean(mc_prices)
+            mean_error = np.mean(errors)
+            std_payoffs = np.std(all_payoffs)
+            std_error = np.exp(-r * T) * std_payoffs / np.sqrt(n)
+            
+            results.append({
+                'simulations': int(n),
+                'mc_price': float(mean_mc_price),
+                'bs_price': float(bs_price),
+                'error': float(mean_error),
+                'std_error': float(std_error),
+                'std': float(std_payoffs),
+                'trials': int(trials)
+            })
         
-        # Calculate statistics
-        mean_error = np.mean(errors)
-        std_error = np.std(mc_prices) / np.sqrt(trials)  # Standard error of the mean
-        theoretical_std = 1.0 / np.sqrt(n)  # Theoretical convergence rate
-        
-        results.append({
-            'simulations': n,
-            'meanError': mean_error,
-            'stdError': std_error,
-            'convergenceRate': theoretical_std * bs_price,  # Scale by price for meaningful comparison
-            'mcPrice': np.mean(mc_prices),
-            'trials': trials
+        return jsonify({
+            'success': True,
+            'results': results,
+            'black_scholes_price': float(bs_price),
+            'option_type': option_type
         })
-    
-    return jsonify({
-        'results': results, 
-        'bsPrice': bs_price,
-        'optionType': option_type
-    })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 400
+
 @app.route('/api/export-results', methods=['POST'])
 def export_results():
     data = request.json
